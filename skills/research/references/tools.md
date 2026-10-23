@@ -23,7 +23,7 @@ One cheap call each. Examples:
 - alphaxiv: discover with one keyword
 - context7: resolve a library id for a well-known library
 - web search: any simple query
-- last30days: confirm the skill is listed, then run its own doctor or health check if it has one
+- last30days: confirm the skill is listed. Run its doctor only when a question routes to it. The doctor probes about 10 sources at up to 10 seconds each and writes its cache under `~/.config/last30days/`, so it is not a cheap probe
 
 A probe passes when it returns a result. It fails on an error, a timeout, a missing tool, or a credit or auth message. Quote the shortest line that says why.
 

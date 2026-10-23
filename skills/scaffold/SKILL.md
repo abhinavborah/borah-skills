@@ -56,7 +56,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/ghost.py" check
 
 Use `--levels attribution,untracked` style lists for chosen levels. Commits made before this step are not held against the project: the command records the current commit as a baseline. If it warns that an existing commit-msg hook is in use, add the line it prints to that hook. With ghost off, still run `--levels none`, which only keeps `.claude/` out of git through `.git/info/exclude`, never `.gitignore`.
 
-Ghost mode applies to this clone only. Its script and chosen levels live in the git common dir, so linked worktrees share them. Project settings do not reach a worktree, so recommend the `checker` level together with `attribution`: the hook still blocks agent trailers where the setting does not apply.
+Ghost mode applies to this clone only. Its script and chosen levels live in the git common dir, so linked worktrees share them. Project settings reach subagent worktrees, but not a session started inside a worktree (`claude -w`). A setting also does not stop a trailer the model writes itself. So recommend the `checker` level together with `attribution`: the hook still blocks agent trailers where the setting does not apply.
 
 ## 6. Commit and publish
 
