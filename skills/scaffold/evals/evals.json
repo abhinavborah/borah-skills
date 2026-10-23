@@ -1,0 +1,9 @@
+{
+  "skill_name": "scaffold",
+  "evals": [
+    { "id": 1, "prompt": "/hack-kit:scaffold", "expected_output": "Confirms the directory, runs preflight, interviews in batches, creates nothing the user declines." },
+    { "id": 2, "prompt": "/hack-kit:scaffold my-app, ghost mode for attribution and untracked only", "expected_output": "Applies only those two levels and still excludes .claude/ through .git/info/exclude." },
+    { "id": 3, "prompt": "set up a new hackathon project for me", "expected_output": "Does NOT auto-load. The skill is manual only, so the model suggests running /hack-kit:scaffold and waits.", "should_trigger": false },
+    { "id": 4, "prompt": "create a README for this repo", "expected_output": "Does NOT trigger scaffold.", "should_trigger": false }
+  ]
+}
