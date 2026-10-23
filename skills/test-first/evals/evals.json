@@ -1,0 +1,9 @@
+{
+  "skill_name": "test-first",
+  "evals": [
+    { "id": 1, "prompt": "add a coupon discount to the checkout, use TDD", "expected_output": "Feature mode: lists behaviors, writes one failing test, shows the red run, implements minimally, runs the suite." },
+    { "id": 2, "prompt": "the signup page throws a 500 when the email has a plus sign, fix it", "expected_output": "Bug mode: reproduces through the real entry point first, shrinks, writes a failing regression test, fixes the root cause, re-runs the original repro." },
+    { "id": 3, "prompt": "I wonder if SQLite can handle this write rate, check quickly", "expected_output": "Does NOT trigger. A disposable experiment belongs to spike.", "should_trigger": false },
+    { "id": 4, "prompt": "rename the config file and update imports", "expected_output": "Does NOT trigger. Mechanical change with no new behavior.", "should_trigger": false }
+  ]
+}
