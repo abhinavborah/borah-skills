@@ -1,0 +1,9 @@
+{
+  "skill_name": "better-ui",
+  "evals": [
+    { "id": 1, "prompt": "the dashboard looks plain and generic, make it feel more polished", "expected_output": "Runs the app, audits hierarchy and spacing first, lists findings by impact, fixes the top ones, then verifies in a browser." },
+    { "id": 2, "prompt": "add some animation to the modal and the toast", "expected_output": "Applies the motion rules: short ease-out entrances, shorter exits, transform and opacity only, reduced motion honored." },
+    { "id": 3, "prompt": "write the empty state message for the inbox", "expected_output": "Does NOT trigger better-ui for wording. Copy belongs to ste.", "should_trigger": false },
+    { "id": 4, "prompt": "show me three layout options for the settings page", "expected_output": "Does NOT trigger. Comparing options in code belongs to spike.", "should_trigger": false }
+  ]
+}
