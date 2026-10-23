@@ -2,11 +2,12 @@
 """PostToolUse hook: after a git commit, remind the agent to journal when no entry covers it.
 
 Reads the hook event JSON on stdin. Prints a JSON reminder, or nothing. Silent when:
-the command is not a commit, the project has no docs/journal/, the commit is a merge,
+the command is not a commit, the event comes from a subagent, the project has no docs/journal/, the commit is a merge,
 the commit itself touches docs/journal/, or an entry was written in the last 20 minutes.
 Never fails the tool call: any error exits quietly.
 """
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -22,7 +23,9 @@ def git(cwd, *args):
 
 
 def nudge(event):
-    if "git commit" not in event.get("tool_input", {}).get("command", ""):
+    if event.get("agent_id"):
+        return None  # subagents never write the journal; the orchestrator does
+    if not re.search(r"\bgit\b[^|;&]*\bcommit\b", event.get("tool_input", {}).get("command", "")):
         return None
     top = git(event.get("cwd") or ".", "rev-parse", "--show-toplevel")
     journal = Path(top) / "docs" / "journal" if top else None
@@ -69,6 +72,10 @@ def self_test():
         out = nudge(event(r))
         assert out and "hack-kit:project-log" in out["hookSpecificOutput"]["additionalContext"], out
         assert nudge(event(r, "git status")) is None, "not a commit"
+        assert nudge(event(r, f"git -C {r} commit -m x")), "git -C commit must count"
+        sub = event(r)
+        sub["agent_id"] = "abc"
+        assert nudge(sub) is None, "subagent events must stay silent"
         entry = r / "docs" / "journal" / "2026_10_24_100000_use_postgres.md"
         entry.write_text("x\n")
         run(r, "git", "add", "-A")
