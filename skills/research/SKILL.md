@@ -22,7 +22,7 @@ Tool details and the order to try them: [references/tools.md](references/tools.m
 - Route by question type using the table in [references/tools.md](references/tools.md).
 - Search first and read result highlights. Fetch a page only when a highlight is not enough.
 - For a long docs page, fetch the raw `.md` or text with `curl` into a temp file and filter it with `grep`. Do not load whole pages into context.
-- Never use firecrawl scrape with the `query` format. It failed on 5 of 5 pages in testing and still charged credits.
+- Avoid firecrawl scrape with the `query` format. It failed on 5 of 5 pages in testing (2026-10) and still charged credits. Use markdown format or curl instead, and re-test before trusting it.
 - Check versions at the source of truth (registry or release page), not in blog posts.
 
 ## 3. When a tool fails

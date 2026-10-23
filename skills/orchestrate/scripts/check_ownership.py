@@ -41,7 +41,7 @@ def changed(repo, base, ref):
     r = subprocess.run(["git", "-C", repo, "diff", "--name-only", f"{base}...{ref}"], capture_output=True, text=True)
     if r.returncode:
         sys.exit(f"git diff failed for {ref}: {r.stderr.strip()}")
-    return set(r.stdout.split())
+    return set(r.stdout.splitlines())
 
 
 def gate(plan, repo, base, refs):
