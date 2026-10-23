@@ -1,0 +1,16 @@
+{
+  "name": "borah-skills",
+  "owner": {
+    "name": "Abhinav Borah"
+  },
+  "metadata": {
+    "description": "Skills by Abhinav Borah."
+  },
+  "plugins": [
+    {
+      "name": "hack-kit",
+      "source": "./",
+      "description": "Hackathon project workflow: opt-in scaffolding, OKF docs, research, handoffs, subagent orchestration, and build-phase skills."
+    }
+  ]
+}
