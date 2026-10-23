@@ -1,0 +1,9 @@
+{
+  "skill_name": "demo-pitch",
+  "evals": [
+    { "id": 1, "prompt": "the hackathon ends tomorrow, help me prepare the demo and the pitch", "expected_output": "Asks for the rules, states the problem, picks one flow, writes a timed script, a risk list with fallbacks and a rehearsal plan." },
+    { "id": 2, "prompt": "write the Devpost submission text for our project", "expected_output": "Drafts each submission field to its length limit in short, concrete sentences." },
+    { "id": 3, "prompt": "write the README setup instructions", "expected_output": "Does NOT trigger. Documentation belongs to ste.", "should_trigger": false },
+    { "id": 4, "prompt": "make the landing page look better", "expected_output": "Does NOT trigger. UI polish belongs to better-ui.", "should_trigger": false }
+  ]
+}
