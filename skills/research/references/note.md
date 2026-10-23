@@ -23,7 +23,7 @@ What was asked, and what decision it feeds.
 
 ## Findings
 Claims with their strength in brackets, cited by footnote.
-- Next.js 16.x is the current stable line. [primary][^nextjs-releases]
+- Library X vA.B is the current stable release, published on a date. [primary][^nextjs-releases]
 
 ## Recommendation
 Options ranked, with the reason for the top one. Say what would change the ranking.
