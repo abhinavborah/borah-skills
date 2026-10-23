@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Ghost mode: keep agent traces out of a project's tracked history.
 
-Usage: ghost.py apply --root DIR --levels all|a,b,c
+Usage: ghost.py apply --root DIR --levels all|none|a,b,c
        ghost.py check [--root DIR]
        ghost.py check-msg FILE        (used by the commit-msg hook)
        ghost.py --self-test
@@ -11,12 +11,20 @@ Levels (independent):
   untracked     CLAUDE.md and AGENTS.md excluded through .git/info/exclude
   neutral-code  tracked files outside docs/ and commit messages carry no agent markers
   neutral-docs  docs/ prose carries none either (handoff folders are exempt)
-  checker       a commit-msg hook runs this script
+  checker       a commit-msg hook blocks agent trailers (and wording, with neutral-code)
+
+Markers come in two groups. Trailers (bot co-author lines, "generated with ..." lines) are
+enforced by checker, attribution and neutral-code. Wording (tool names, robot emoji, "AI-generated")
+is enforced only by neutral-code and neutral-docs.
 
 .claude/ is always excluded through .git/info/exclude and never named in .gitignore.
---levels none excludes only .claude/. The script, hook config and chosen levels live in
+--levels none excludes only .claude/. The script and ghost.json live in
 <git-common-dir>/ghost/, shared by every linked worktree and never tracked. Applies per clone.
+
+ghost.json keys: levels, agent_dirs, extra_markers (regex list), ignore_markers (regex list; a
+matching line is skipped), ignore_paths (globs), baseline (commit; older history is not scanned).
 """
+import fnmatch
 import json
 import os
 import re
@@ -29,16 +37,19 @@ from pathlib import Path
 
 LEVELS = ["attribution", "untracked", "neutral-code", "neutral-docs", "checker"]
 AGENT_DIRS = ["docs/handoffs", "docs/subagent-handoffs"]
-MARKERS = [
-    r"co-authored-by:.*(claude|anthropic|copilot|chatgpt|gpt|gemini|codex|cursor)",
-    r"generated (with|by) .{0,30}(claude|\bai\b|chatgpt|gpt|copilot|gemini|codex|cursor)",
+TRAILERS = [
+    r"co-authored-by:.*noreply@anthropic\.com",
+    r"co-authored-by:\s*(claude|copilot|chatgpt|gemini|codex|cursor)\b[^<\n]*<[^>\n]*(noreply|bot|\.ai|anthropic|openai)[^>\n]*>",
+    r"generated (with|by) \[?(claude|chatgpt|copilot|gemini|codex|cursor)",
+]
+WORDING = [
+    r"generated (with|by) .{0,30}\bai\b",
     r"\bclaude code\b",
     "\U0001F916",
     r"written (with|by) (the help of )?(an? )?(ai|claude|chatgpt)",
     r"as an ai (language )?model",
     r"\bai[- ]generated\b",
 ]
-MARK = re.compile("|".join(f"(?:{m})" for m in MARKERS), re.I)
 HOOK = '#!/bin/sh\nexec python3 "$(git rev-parse --path-format=absolute --git-common-dir)/ghost/ghost.py" check-msg "$1"\n'
 
 
@@ -55,7 +66,16 @@ def cfgdir(root):
 def load(root):
     p = cfgdir(root) / "ghost.json"
     cfg = json.loads(p.read_text()) if p.exists() else {}
-    return cfg.get("levels", LEVELS), cfg.get("agent_dirs", AGENT_DIRS), cfg.get("extra_markers", [])
+    base = {"levels": LEVELS, "agent_dirs": AGENT_DIRS, "extra_markers": [], "ignore_markers": [], "ignore_paths": [], "baseline": None}
+    return {**base, **cfg}
+
+
+def pattern(parts, extra):
+    return re.compile("|".join(f"(?:{m})" for m in [*parts, *extra]), re.I)
+
+
+def hook_path(root):
+    return Path(git(root, "rev-parse", "--path-format=absolute", "--git-path", "hooks/commit-msg")[1].strip())
 
 
 def apply(root, levels):
@@ -68,7 +88,12 @@ def apply(root, levels):
         sys.exit(f"unknown levels: {bad}")
     cd = cfgdir(root)
     cd.mkdir(parents=True, exist_ok=True)
-    (cd / "ghost.json").write_text(json.dumps({"levels": levels, "agent_dirs": AGENT_DIRS}, indent=2) + "\n")
+    cfg = load(root)
+    cfg["levels"] = levels
+    if not cfg["baseline"]:
+        rc, head = git(root, "rev-parse", "--verify", "-q", "HEAD")
+        cfg["baseline"] = head.strip() if rc == 0 else None  # earlier history is not held against the project
+    (cd / "ghost.json").write_text(json.dumps(cfg, indent=2) + "\n")
     lines = [".claude/"] + (["CLAUDE.md", "AGENTS.md"] if "untracked" in levels else [])
     exclude = Path(git(root, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude")[1].strip())
     exclude.parent.mkdir(parents=True, exist_ok=True)
@@ -77,37 +102,43 @@ def apply(root, levels):
     if "attribution" in levels:
         sp = root / ".claude" / "settings.json"
         sp.parent.mkdir(exist_ok=True)
-        cfg = json.loads(sp.read_text()) if sp.exists() else {}
-        cfg["attribution"] = {"commit": "", "pr": "", "sessionUrl": False}
-        sp.write_text(json.dumps(cfg, indent=2) + "\n")
+        settings = json.loads(sp.read_text()) if sp.exists() else {}
+        settings["attribution"] = {"commit": "", "pr": "", "sessionUrl": False}
+        sp.write_text(json.dumps(settings, indent=2) + "\n")
     if "checker" in levels:
         me = Path(__file__).resolve()
         dest = cd / "ghost.py"
         if me != dest.resolve():
             shutil.copy(me, dest)
-        hook = Path(git(root, "rev-parse", "--path-format=absolute", "--git-path", "hooks/commit-msg")[1].strip())
+        hook = hook_path(root)
+        hp = git(root, "config", "core.hooksPath")[1].strip()
         if hook.exists() and "ghost.py" not in hook.read_text():
-            print(f"kept existing {hook}; add a call to .claude/ghost.py check-msg manually")
+            print(f"WARNING an existing commit-msg hook is in use: {hook}")
+            print(f'  call the checker from it (or from your hook manager): python3 "{dest}" check-msg "$1"')
+            print("  until then agent trailers are not blocked")
         else:
             hook.parent.mkdir(parents=True, exist_ok=True)
             hook.write_text(HOOK)
             hook.chmod(hook.stat().st_mode | stat.S_IXUSR)
+            if hp:
+                print(f"note: core.hooksPath is {hp}; the hook was installed there. Run apply again if you change it.")
     tracked = [f for f in git(root, "ls-files", ".claude", "CLAUDE.md", "AGENTS.md")[1].splitlines() if f]
     print(f"ghost levels: {','.join(levels) or 'none'}")
     if tracked:
         print(f"already tracked, run git rm --cached on: {' '.join(tracked)}")
 
 
-def scan_text(label, text, pattern, out):
+def scan_text(label, text, pat, ignore, out):
     for n, line in enumerate(text.splitlines(), 1):
-        if pattern.search(line):
+        if pat.search(line) and not any(re.search(i, line, re.I) for i in ignore):
             out.append(f"{label}:{n}: agent marker: {line.strip()[:80]}")
 
 
 def check(root):
     root = Path(root).resolve()
-    levels, agent_dirs, extra = load(root)
-    pat = re.compile(MARK.pattern + "".join(f"|(?:{m})" for m in extra), re.I)
+    cfg = load(root)
+    levels, agent_dirs, ignore = cfg["levels"], cfg["agent_dirs"], cfg["ignore_markers"]
+    trailers, full = pattern(TRAILERS, cfg["extra_markers"]), pattern(TRAILERS + WORDING, cfg["extra_markers"])
     out = []
     files = [f for f in git(root, "ls-files")[1].splitlines() if f]
     for f in files:
@@ -130,38 +161,43 @@ def check(root):
         if a.get("commit") != "" or a.get("pr") != "" or a.get("sessionUrl") is not False:
             out.append(".claude/settings.json: attribution is not blank")
     if "checker" in levels:
-        rc, p = git(root, "rev-parse", "--path-format=absolute", "--git-path", "hooks/commit-msg")
-        hook = Path(p.strip())
+        hook = hook_path(root)
         if not hook.exists() or "ghost.py" not in hook.read_text():
-            out.append("commit-msg hook missing")
+            hp = git(root, "config", "core.hooksPath")[1].strip()
+            out.append(f"commit-msg hook missing or shadowed (core.hooksPath={hp or 'unset'}); run apply again")
     for f in files:
         if Path(f).name in ("CLAUDE.md", "AGENTS.md") or f.startswith(".claude/"):
+            continue
+        if any(fnmatch.fnmatch(f, g) for g in cfg["ignore_paths"]):
             continue
         in_docs = f.startswith("docs/")
         exempt = any(f.startswith(d + "/") for d in agent_dirs)
         if (in_docs and ("neutral-docs" not in levels or exempt)) or (not in_docs and "neutral-code" not in levels):
             continue
         try:
-            scan_text(f, (root / f).read_text(), pat, out)
+            scan_text(f, (root / f).read_text(), full, ignore, out)
         except (UnicodeDecodeError, FileNotFoundError, IsADirectoryError):
             pass
-    if "neutral-code" in levels or "attribution" in levels:
-        rc, log = git(root, "log", "--format=%h%x01%B%x02")
+    if {"neutral-code", "attribution", "checker"} & set(levels):
+        base = cfg["baseline"]
+        span = [f"{base}..HEAD"] if base and git(root, "cat-file", "-e", f"{base}^{{commit}}")[0] == 0 else []
+        rc, log = git(root, "log", "--format=%h%x01%B%x02", *span)
         for entry in log.split("\x02"):
             sha, _, body = entry.strip().partition("\x01")
             if sha:
-                scan_text(f"commit {sha}", body, pat, out)
+                scan_text(f"commit {sha}", body, full if "neutral-code" in levels else trailers, ignore, out)
     return out
 
 
 def check_msg(path):
-    levels, _, extra = load(Path.cwd())
-    if "neutral-code" not in levels and "attribution" not in levels:
+    cfg = load(Path.cwd())
+    levels = cfg["levels"]
+    if not {"neutral-code", "attribution", "checker"} & set(levels):
         return []
-    pat = re.compile(MARK.pattern + "".join(f"|(?:{m})" for m in extra), re.I)
+    pat = pattern(TRAILERS + (WORDING if "neutral-code" in levels else []), cfg["extra_markers"])
     text = "\n".join(l for l in Path(path).read_text().splitlines() if not l.startswith("#"))
     out = []
-    scan_text("commit message", text, pat, out)
+    scan_text("commit message", text, pat, cfg["ignore_markers"], out)
     return out
 
 
@@ -172,13 +208,18 @@ def self_test():
     def run(*a, cwd):
         return subprocess.run(list(a), cwd=cwd, capture_output=True, text=True, env=env)
 
+    def apply_to(r, levels):
+        run("python3", str(me), "apply", "--root", str(r), "--levels", levels, cwd=r)
+
+    BOT = "x\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+
     with tempfile.TemporaryDirectory() as t:
         r = Path(t)
         run("git", "init", "-q", cwd=r)
         (r / "app.py").write_text("print('hi')\n")
         (r / "CLAUDE.md").write_text("rules\n")
         run("git", "add", "app.py", cwd=r)
-        run("python3", str(me), "apply", "--root", str(r), "--levels", "all", cwd=r)
+        apply_to(r, "all")
         for p in (".git/ghost/ghost.json", ".claude/settings.json", ".git/ghost/ghost.py", ".git/hooks/commit-msg"):
             assert (r / p).exists(), p
         ex = (r / ".git/info/exclude").read_text()
@@ -186,8 +227,7 @@ def self_test():
         assert not (r / ".gitignore").exists()
         assert run("git", "commit", "-q", "-m", "add app", cwd=r).returncode == 0
         assert check(r) == [], check(r)
-        bad = run("git", "commit", "-q", "--allow-empty", "-m", "x\n\nCo-Authored-By: Claude <noreply@anthropic.com>", cwd=r)
-        assert bad.returncode != 0, "hook should block a marked message"
+        assert run("git", "commit", "-q", "--allow-empty", "-m", BOT, cwd=r).returncode != 0, "hook should block a marked message"
         (r / "notes.md").write_text("Generated with Claude Code\n")
         (r / ".gitignore").write_text(".claude/\n")
         run("git", "add", "notes.md", ".gitignore", cwd=r)
@@ -202,25 +242,72 @@ def self_test():
         run("git", "init", "-q", "-b", "main", cwd=r)
         (r / "app.py").write_text("print('hi')\n")
         run("git", "add", "app.py", cwd=r)
-        run("python3", str(me), "apply", "--root", str(r), "--levels", "all", cwd=r)
+        apply_to(r, "all")
         assert run("git", "commit", "-q", "-m", "add app", cwd=r).returncode == 0
         run("git", "worktree", "add", "-q", "-b", "side", str(wt), cwd=r)
         assert run("git", "commit", "-q", "--allow-empty", "-m", "fine", cwd=wt).returncode == 0
-        bad = run("git", "commit", "-q", "--allow-empty", "-m", "x\n\nGenerated with Claude Code", cwd=wt)
-        assert bad.returncode != 0, "hook must also block inside a worktree"
+        assert run("git", "commit", "-q", "--allow-empty", "-m", "x\n\nGenerated with Claude Code", cwd=wt).returncode != 0
         assert check(wt) == [], check(wt)
 
     # ghost off: only .claude/ is excluded and nothing is checked
     with tempfile.TemporaryDirectory() as t:
         r = Path(t)
         run("git", "init", "-q", cwd=r)
-        run("python3", str(me), "apply", "--root", str(r), "--levels", "none", cwd=r)
+        apply_to(r, "none")
         lines = [l for l in (r / ".git/info/exclude").read_text().splitlines() if l and not l.startswith("#")]
         assert lines == [".claude/"], lines
         (r / "n.md").write_text("Generated with Claude Code\n")
         run("git", "add", "n.md", cwd=r)
         run("git", "commit", "-q", "-m", "n", cwd=r)
         assert check(r) == [], check(r)
+
+    # checker works alone for trailers, but does not police wording
+    with tempfile.TemporaryDirectory() as t:
+        r = Path(t)
+        run("git", "init", "-q", cwd=r)
+        apply_to(r, "checker")
+        assert run("git", "commit", "-q", "--allow-empty", "-m", BOT, cwd=r).returncode != 0, "checker alone must block trailers"
+        assert run("git", "commit", "-q", "--allow-empty", "-m", "uses the Claude Code CLI", cwd=r).returncode == 0
+
+    # a human with the same first name is not a bot; the allowlist and path globs work
+    with tempfile.TemporaryDirectory() as t:
+        r = Path(t)
+        run("git", "init", "-q", cwd=r)
+        apply_to(r, "neutral-code,checker")
+        human = "x\n\nCo-authored-by: Claude Dubois <claude.dubois@example.fr>"
+        assert run("git", "commit", "-q", "--allow-empty", "-m", human, cwd=r).returncode == 0, "human co-author must pass"
+        (r / "bot.py").write_text("print('\U0001F916 ready')\n")
+        (r / "README.md").write_text("Summaries are AI-generated by our model.\n")
+        run("git", "add", "-A", cwd=r)
+        run("git", "commit", "-q", "-m", "add files", cwd=r)
+        assert len(check(r)) == 2, check(r)
+        cfgp = r / ".git" / "ghost" / "ghost.json"
+        cfg = json.loads(cfgp.read_text())
+        cfg["ignore_paths"] = ["bot.py"]
+        cfg["ignore_markers"] = [r"ai-generated by our model"]
+        cfgp.write_text(json.dumps(cfg))
+        assert check(r) == [], check(r)
+
+    # history before apply is not held against the project
+    with tempfile.TemporaryDirectory() as t:
+        r = Path(t)
+        run("git", "init", "-q", cwd=r)
+        run("git", "commit", "-q", "--allow-empty", "-m", BOT, cwd=r)
+        apply_to(r, "attribution,checker")
+        assert check(r) == [], check(r)
+        run("git", "commit", "-q", "--allow-empty", "--no-verify", "-m", BOT, cwd=r)
+        assert any("commit" in l for l in check(r)), check(r)
+
+    # core.hooksPath: installed there, and a later change is reported as shadowing
+    with tempfile.TemporaryDirectory() as t:
+        r = Path(t)
+        run("git", "init", "-q", cwd=r)
+        run("git", "config", "core.hooksPath", ".myhooks", cwd=r)
+        apply_to(r, "checker")
+        assert (r / ".myhooks" / "commit-msg").exists()
+        assert run("git", "commit", "-q", "--allow-empty", "-m", BOT, cwd=r).returncode != 0
+        run("git", "config", "core.hooksPath", ".other", cwd=r)
+        assert any("shadowed" in l for l in check(r)), check(r)
     print("self-test ok")
 
 
