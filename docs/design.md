@@ -76,7 +76,7 @@ Trigger, from Anthropic's guidance ([memory docs](https://code.claude.com/docs/e
 
 The hook only nudges. It never writes content itself, because an auto-written reason would be unsourced text stored as memory. A field report on file-based agent memory ([claude-code#68546](https://github.com/anthropics/claude-code/issues/68546)) found the same failure.
 
-Observed on 2026-10-24 in headless sessions with the plugin loaded (four runs, so a signal and not a measurement). The prompt asked the model to record a decision:
+Observed on 2026-10-24 in headless sessions with the plugin loaded (five runs, so a signal and not a measurement). The prompt asked the model to record a decision:
 
 | Setup | Result |
 |---|---|
@@ -84,5 +84,6 @@ Observed on 2026-10-24 in headless sessions with the plugin loaded (four runs, s
 | Rules file with a journal line | Wrote a valid journal entry and stated that the claim had no evidence beyond the user's word. |
 | No rules file, reworded description, "Record this." | Wrote a journal entry. |
 | No rules file, reworded description, "make sure we remember why" | Saved to private memory again. |
+| Rules in `.claude/rules/hack-kit.md` only, same "remember why" wording | Wrote a valid journal entry. |
 
 The model's own memory feature competes with the skill for any request phrased as "remember". The rules file line is therefore required for dependable logging, and it names that phrasing directly. The commit hook stays as a second layer.
