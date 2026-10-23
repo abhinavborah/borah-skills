@@ -30,8 +30,10 @@ Rules that follow:
 
 ## Composition
 
-- One skill owns each contract. `okf` owns the docs format and its validator. `handoff`, `research` and `scaffold` call the validator through `${CLAUDE_SKILL_DIR}/../okf/scripts/` and do not restate the rules.
-- Skills compose by instruction ("run the `okf` skill"), not by copied text. Duplicated rules drift.
+- One skill owns each contract. `okf-docs` owns the docs format and its validator. `session-handoff`, `research` and `scaffold` call the validator through `${CLAUDE_SKILL_DIR}/../okf-docs/scripts/` and do not restate the rules. `ste` owns writing style and is called, not restated.
+- Skills compose by instruction ("run the `okf-docs` skill"), not by copied text. Duplicated rules drift.
+- Merge two skills when they share a core loop and produce the same kind of artifact. Split them when the procedure differs, even if the triggers sound alike. `spec-interview` covers drafting and stress-testing, `test-first` covers new features and bug fixes, and `better-ui` carries motion as a reference file.
+- A skill whose job duplicates a skill the user may already have installed gets a distinct name, because the model chooses between similar skills by name and description alone.
 - `orchestrate` plans and asks before it spawns. Subagents are leaves: they never spawn. Concurrent subagents are capped at 5.
 
 ## Quality gates
