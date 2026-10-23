@@ -55,7 +55,7 @@ Ghost mode removes agent traces from a project. It is a set of independent level
 | `neutral-docs` | docs prose carries none either; trust fields such as `generated` are omitted |
 | `checker` | a deterministic script scans tracked files and commit messages |
 
-The script and the chosen levels live in the git common directory, so linked worktrees used by subagents share them and nothing new is tracked. Ghost mode applies per clone. Project settings such as `attribution` do not reach a worktree, so the `checker` hook is the backstop there.
+The script and the chosen levels live in the git common directory, so linked worktrees used by subagents share them and nothing new is tracked. Ghost mode applies per clone. Project settings such as `attribution` do not reach a worktree: in a test on 2026-10-24 a commit from a linked worktree still carried a co-author trailer although the main checkout's project settings blanked it, while a commit from the main checkout did not. The `checker` hook, whose script lives in the common dir, is therefore the real backstop in worktrees, and subagent briefs tell the agent to leave such lines out.
 
 ## Journal
 

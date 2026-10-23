@@ -238,6 +238,8 @@ if __name__ == "__main__":
         sys.exit(1 if res else 0)
     elif a[:1] == ["check-msg"] and len(a) == 2:
         res = check_msg(a[1])
+        if res:
+            res.append("commit blocked: remove the agent marker lines from the message and commit again")
         print("\n".join(res), file=sys.stderr)
         sys.exit(1 if res else 0)
     else:

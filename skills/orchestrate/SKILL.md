@@ -38,7 +38,7 @@ Show the plan and ask the user to approve it with AskUserQuestion. State the pac
 1. For each packet, write a brief with the `session-handoff` skill (subagent kind) before dispatch.
 2. Start independent packets together with the Agent tool, one call each in a single message. Packets that write files use worktree isolation. Read-only packets run in place.
 3. Name each subagent after its packet. Right after dispatch, record the returned agent ID and the time in the brief's Agent section. To continue or correct a running or finished subagent, message it by name or ID instead of starting a new one.
-4. The dispatch prompt gives the brief path, the packet name, and these rules: you are a leaf and do not spawn agents; stay inside your ownership; stop and report if the plan looks wrong; fill the Report section of your brief.
+4. The dispatch prompt gives the brief path, the packet name, and these rules: you are a leaf and do not spawn agents; stay inside your ownership; stop and report if the plan looks wrong; fill the Report section of your brief. When `<git-common-dir>/ghost/ghost.json` exists, also: write commit messages with no co-author or generated-with lines.
 
 ## 5. Collect and gate
 

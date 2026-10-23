@@ -38,6 +38,7 @@ Must not touch: everything else. If a change outside is needed, stop and report 
 - You are a leaf. Do not spawn agents.
 - Do not push. Commit only when told.
 - Do not weaken or delete a test to make it pass.
+- If the project uses ghost mode, write commit messages with no co-author or generated-with lines. Project settings do not apply in a worktree, so the commit hook may reject them.
 
 ## Done when
 Commands that must pass, for example `pnpm test billing`.
