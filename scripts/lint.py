@@ -19,6 +19,7 @@ from pathlib import Path
 DESC_CAP = 1536
 BODY_CAP = 500
 LINK = re.compile(r"\]\((?!https?:|mailto:|#)([^)#\s]+)")
+CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 
 
 def frontmatter(text):
@@ -52,7 +53,7 @@ def lint_skill(skill_dir):
     if len(body.splitlines()) > BODY_CAP:
         errs.append(f"{path}: body over {BODY_CAP} lines")
     for md in skill_dir.rglob("*.md"):
-        for ref in LINK.findall(md.read_text()):
+        for ref in LINK.findall(CODE.sub("", md.read_text())):
             target = (md.parent / ref).resolve()
             if not target.exists():
                 errs.append(f"{md}: broken link {ref}")
