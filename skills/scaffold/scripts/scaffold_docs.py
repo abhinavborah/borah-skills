@@ -8,6 +8,7 @@ Usage: scaffold_docs.py --root DIR --project NAME [--by ACTOR] [--neutral]
 --by is the actor for `generated.by`, e.g. human:handle. Defaults to human:unknown.
 """
 import importlib.util
+import json
 import sys
 import tempfile
 from datetime import datetime, timezone
@@ -15,6 +16,7 @@ from pathlib import Path
 
 DIRS = {
     "research": "Dated, sourced research notes.",
+    "journal": "Decisions, findings, changes and rejected approaches, one entry each. Newest first in the index.",
     "specs": "Specs written from interviews. Each requirement has a checkable acceptance criterion.",
     "handoffs": "Timestamped session handoffs. The newest file is read first.",
     "subagent-handoffs": "Briefs and reports for dispatched subagents.",
@@ -22,7 +24,7 @@ DIRS = {
 
 
 def page(kind, title, desc, tags, stamp, body, extra=""):
-    return f"---\ntype: {kind}\ntitle: {title}\ndescription: {desc}\ntags: [{tags}]\n{stamp}\n{extra}---\n\n{body}\n"
+    return f"---\ntype: {kind}\ntitle: {json.dumps(title)}\ndescription: {json.dumps(desc)}\ntags: [{tags}]\n{stamp}\n{extra}---\n\n{body}\n"
 
 
 def build(root, project, by, neutral):
