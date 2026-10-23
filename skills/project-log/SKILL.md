@@ -1,6 +1,6 @@
 ---
 name: project-log
-description: Record why things happened in docs/journal/: decisions, findings, changes, rejected approaches and open questions. Use right after a decision is made, research or a spike finishes, direction changes, an approach is rejected, or a commit needs explaining. Also read the active decisions at session start. Not for session handoffs (use session-handoff) or doc format (use okf-docs).
+description: Log decisions, findings, changes and rejected approaches as shared project history in docs/journal/. Use when the user says to record, log, note or write down a decision or the reason for something, and right after a decision is made, research or a spike finishes, direction changes, or an approach is rejected. Also read active decisions at session start. Not for private notes, session handoffs (use session-handoff) or doc format (use okf-docs).
 ---
 
 # Project log

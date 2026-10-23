@@ -3,6 +3,7 @@
   "evals": [
     { "id": 1, "prompt": "ok let's go with Postgres instead of SQLite", "expected_output": "Loads project-log, creates a decision entry with the reason and rejected alternative, fills the placeholders, validates." },
     { "id": 2, "prompt": "the spike showed the websocket library drops messages above 300 clients", "expected_output": "Creates a finding entry with evidence strength and scope, linked to the spike result." },
+    { "id": 5, "prompt": "quick note for later: we dropped Redis because it is overkill for a two day demo, make sure we remember why", "expected_output": "With the rules file loaded, writes a journal entry with project-log. Private memory alone is not enough." },
     { "id": 3, "prompt": "fix the typo in the README", "expected_output": "Does NOT trigger. A routine edit the diff explains.", "should_trigger": false },
     { "id": 4, "prompt": "write a handoff for the next agent", "expected_output": "Does NOT trigger project-log first. Triggers session-handoff, which links recent journal entries.", "should_trigger": false }
   ]

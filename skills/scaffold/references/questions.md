@@ -21,7 +21,7 @@ Ask for confirmation again immediately before running `gh repo create`.
 
 - Create `CLAUDE.md`? yes or no.
 - Create `AGENTS.md`? yes or no.
-- If both are no: write a project-local router skill so skill selection still works? yes or no.
+- If both are no: write the same rules to `.claude/rules/hack-kit.md` (loaded every session, stays untracked) so skill selection and logging still work? yes or no.
 
 ## Batch 4: stack
 

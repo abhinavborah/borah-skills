@@ -45,7 +45,7 @@ python3 "${CLAUDE_SKILL_DIR}/../okf-docs/scripts/okf_validate.py" --strict docs
 
 Add `--neutral` when ghost level `neutral-docs` is chosen.
 
-3. Agent files, from [references/rules_file.md](references/rules_file.md). If both are chosen, put the content in `AGENTS.md` and make `CLAUDE.md` a single line: `@AGENTS.md`. If both are declined, write the project-local router skill from [references/route_skill.md](references/route_skill.md) to `.claude/skills/route/SKILL.md` instead.
+3. Agent files, from [references/rules_file.md](references/rules_file.md). If both are chosen, put the content in `AGENTS.md` and make `CLAUDE.md` a single line: `@AGENTS.md`. If both are declined and the user agrees, write the same content to `.claude/rules/hack-kit.md` instead. Rules files without path scopes load at the start of every session, and `.claude/` stays untracked.
 4. Stack bootstrap, if confirmed.
 5. Ghost mode, if chosen. Always last, so the files above exist to be excluded:
 

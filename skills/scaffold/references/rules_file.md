@@ -1,6 +1,6 @@
 # Project rules file template
 
-Write to `AGENTS.md` (and a one-line `CLAUDE.md` containing `@AGENTS.md` if both are chosen), or to whichever single file was chosen. Fill the placeholders from the interview. Keep it short: it loads in every session.
+Write to `AGENTS.md` (and a one-line `CLAUDE.md` containing `@AGENTS.md` if both are chosen), or to whichever single file was chosen, or to `.claude/rules/hack-kit.md` if both were declined. Fill the placeholders from the interview. Keep it short: it loads in every session.
 
 ````markdown
 # <Project name>
@@ -24,6 +24,7 @@ Write to `AGENTS.md` (and a one-line `CLAUDE.md` containing `@AGENTS.md` if both
 - Ask before destructive or outward-facing actions: deleting, force pushing, publishing, spending credits.
 - Commit in small logical groups with explicit file lists. Do not push unless asked.
 - Record each decision, finding, change of direction and rejected approach with `hack-kit:project-log` as it happens. Read the digest at session start.
+- When asked to record, log, note or remember a decision or its reason for this project, write a journal entry with `hack-kit:project-log`. Private memory alone is not shared project history.
 - Write a handoff before the context fills up.
 - Fix bugs by reproducing them first, as the user would see them.
 
