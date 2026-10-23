@@ -9,7 +9,7 @@ Rules (limits come from the Claude Code skills docs and the authoring guide):
   description present, single line; description + when_to_use <= 1536 chars
   body        <= 500 lines
   links       relative links resolve; reference files do not link onward
-  prose       no em dash and no spaced double hyphen in .md or .json files
+  prose       no em dash and no spaced double hyphen in .md, .json, .py or .yml files
 """
 import re
 import sys
@@ -18,6 +18,8 @@ from pathlib import Path
 
 DESC_CAP = 1536
 BODY_CAP = 500
+EM_DASH = chr(0x2014)
+SPACED_DOUBLE = " " + "-" * 2 + " "
 LINK = re.compile(r"\]\((?!https?:|mailto:|#)([^)#\s]+)")
 CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 
@@ -64,11 +66,11 @@ def lint_skill(skill_dir):
 
 def lint_prose(root):
     errs = []
-    for f in list(root.rglob("*.md")) + list(root.rglob("*.json")):
+    for f in [*root.rglob("*.md"), *root.rglob("*.json"), *root.rglob("*.py"), *root.rglob("*.yml")]:
         if ".git" in f.parts:
             continue
         t = f.read_text()
-        if "—" in t or " -- " in t:
+        if EM_DASH in t or SPACED_DOUBLE in t:
             errs.append(f"{f}: em dash or spaced double hyphen")
     return errs
 
@@ -100,7 +102,7 @@ def self_test():
         d = make(bad, "claude-x", body="\n" * 600)
         (d / "ref.md").write_text("see [other](other.md)\n")
         (d / "other.md").write_text("x\n")
-        d2 = make(bad, "beta", body="[gone](nope.md) and a — dash\n")
+        d2 = make(bad, "beta", body="[gone](nope.md) and a " + EM_DASH + " dash\n")
         (d2 / "SKILL.md").write_text((d2 / "SKILL.md").read_text().replace("name: beta", "name: wrong"))
         out = "\n".join(lint(bad))
         for needle in ("invalid name", "body over", "broken link", "must equal directory", "em dash"):

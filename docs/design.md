@@ -40,7 +40,7 @@ Rules that follow:
 ## Quality gates
 
 - Skills are written against failures, not imagined needs: observe the gap, write the minimum, test on a fresh session ([authoring guide](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices), [Authoring Agent Skills, 2026-07](https://arxiv.org/html/2607.25032v1)).
-- Over 99% of surveyed `SKILL.md` files carry at least one authoring smell ([From Anatomy to Smells, 2026-07](https://www.alphaxiv.org/abs/2607.01456)), so `scripts/lint.py` runs before every commit.
+- Over 99% of surveyed `SKILL.md` files carry at least one authoring smell ([From Anatomy to Smells, 2026-07](https://www.alphaxiv.org/abs/2607.01456)), so `scripts/lint.py` runs in CI on every push, next to every script's `--self-test`.
 - Each skill ships `evals/evals.json` with two prompts that should trigger it and two near misses that should not. These files document intended triggers. They are not yet runnable: the native runner (`claude plugin eval`) expects `case.yaml` or `prompt.md` plus `graders/`, so converting them is future work.
 
 ## Ghost mode
@@ -53,7 +53,7 @@ Ghost mode removes agent traces from a project. It is a set of independent level
 | `untracked` | agent folders and rule files excluded through `.git/info/exclude`, never `.gitignore` |
 | `neutral-code` | README, source, comments, commit messages and PR text carry no agent wording |
 | `neutral-docs` | docs prose carries none either; trust fields such as `generated` are omitted |
-| `checker` | a deterministic script scans tracked files and commit messages |
+| `checker` | a commit-msg hook blocks agent trailers (bot co-author lines, "generated with" lines). With `neutral-code` it also blocks wording |
 
 The script and the chosen levels live in the git common directory, so linked worktrees used by subagents share them and nothing new is tracked. Ghost mode applies per clone. Project settings such as `attribution` do not reach a worktree: in a test on 2026-10-24 a commit from a linked worktree still carried a co-author trailer although the main checkout's project settings blanked it, while a commit from the main checkout did not. The `checker` hook, whose script lives in the common dir, is therefore the real backstop in worktrees, and subagent briefs tell the agent to leave such lines out.
 
@@ -65,14 +65,14 @@ Model, from decision-record practice ([Fowler, 2026-03](https://www.martinfowler
 
 - One decision per entry, with context, the reason, alternatives and consequences.
 - Accepted entries are never edited. A new entry supersedes the old one, and both link to each other. In OKF terms, `draft` is proposed, `stable` is accepted and `deprecated` is superseded.
-- Entries are named by timestamp, not by sequence number, so parallel subagents cannot collide on the next number.
+- Entries are named by timestamp, not by sequence number, so writers on different branches or machines cannot collide on the next number. Names use UTC, so they sort the same everywhere.
 - Findings carry an evidence strength and a scope, because agents can carry forward a conclusion that its evidence does not support ([From Experiments to Decisions, 2026-09](https://www.alphaxiv.org/abs/2609.13299)).
 - Reading goes through a digest of active decisions, so superseded entries and old noise do not bloat context.
 
 Trigger, from Anthropic's guidance ([memory docs](https://code.claude.com/docs/en/memory.md), [steering article, 2026-06](https://claude.com/resources/articles/steering-claude-code-skills-hooks-rules-subagents-and-more)): instructions and skills are context, and a model can skip them in a long session or under pressure. Anything that must happen at a fixed point belongs in a hook. But a hook cannot write the reason, which needs judgment. So the design layers two parts:
 
 1. The `project-log` skill and a line in the project rules file make the model write entries when a decision, finding or rejection happens.
-2. A plugin `PostToolUse` hook on `git commit` is the backstop. It adds a one-line reminder when a commit carries no entry and none was written in the last 20 minutes. It is silent in projects without `docs/journal/`, adds nothing to the repository, and also runs inside subagents.
+2. A plugin `PostToolUse` hook on `git commit` is the backstop. It adds a one-line reminder when a commit carries no entry and none was written in the last 20 minutes. It is silent in projects without `docs/journal/`, adds nothing to the repository, and stays silent for subagent events (plugin hooks do run inside subagents, but subagents never write the journal, so the orchestrator reads their Reports and journals for them).
 
 The hook only nudges. It never writes content itself, because an auto-written reason would be unsourced text stored as memory. A field report on file-based agent memory ([claude-code#68546](https://github.com/anthropics/claude-code/issues/68546)) found the same failure.
 
@@ -87,3 +87,16 @@ Observed on 2026-10-24 in headless sessions with the plugin loaded (five runs, s
 | Rules in `.claude/rules/hack-kit.md` only, same "remember why" wording | Wrote a valid journal entry. |
 
 The model's own memory feature competes with the skill for any request phrased as "remember". The rules file line is therefore required for dependable logging, and it names that phrasing directly. The commit hook stays as a second layer.
+
+## Parallel work
+
+Findings from an adversarial review on 2026-10-24, checked against the Claude Code docs:
+
+- A subagent worktree branches from the default branch on the remote, not from local commits, unless `worktree.baseRef` is `"head"` ([worktrees docs](https://code.claude.com/docs/en/worktrees.md)). Once a project has a remote, subagents would miss the committed plan, their briefs and all unpushed work. `orchestrate` runs `preflight.py`, which checks this and a clean tree, and can set `baseRef` after the user agrees.
+- A subagent can spawn subagents of its own by default, up to three layers deep ([subagents docs](https://code.claude.com/docs/en/sub-agents.md)). A prompt rule is not a limit, so writing packets use the shipped `packet-worker` agent, which sets `disallowedTools: Agent` and `isolation: worktree`.
+- The merge gate diffs commits. It therefore fails a packet with no commits, fails a dirty worktree, and treats a rename as a delete plus an add, so moving a file out of another packet's area is caught.
+- Ghost mode keeps a history baseline. Commits made before it was applied are not held against the project.
+
+## Versioning
+
+`plugin.json` carries no `version`. When a manifest pins one, users stay on the cached copy until the string changes ([plugin loading docs](https://code.claude.com/docs/en/plugins/loading.md)). Without it, every commit is a new version for installers. The cost is that `claude plugin validate --strict` warns about the missing field, so strict validation is not used on the manifest.

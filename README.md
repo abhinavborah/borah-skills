@@ -38,18 +38,21 @@ Restart Claude Code after installing. Skills appear as `/hack-kit:<skill>`.
 .claude-plugin/    plugin and marketplace manifests
 skills/<name>/     one SKILL.md per skill, with optional references/ and scripts/
 hooks/             the journal reminder hook
-scripts/lint.py    skill linter used before every commit
+agents/            the packet-worker agent used by orchestrate
+scripts/lint.py    skill and prose linter, run in CI on every push
 docs/design.md     how the skills are structured and why
 ```
 
 ## Develop
 
 ```shell
-python3 scripts/lint.py                 # lint every skill
+python3 scripts/lint.py                 # lint every skill and all prose
 python3 scripts/lint.py --self-test     # test the linter
-claude plugin validate --strict .claude-plugin/plugin.json
-claude plugin validate --strict .claude-plugin/marketplace.json
+claude plugin validate .                # manifest, skills, agents, hooks
+claude plugin validate .claude-plugin/marketplace.json
 ```
+
+No version is pinned in `plugin.json`, so every commit reaches installers as a new version. See [docs/design.md](docs/design.md).
 
 ## License
 

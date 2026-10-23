@@ -1,0 +1,25 @@
+name: check
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Git identity for the tests
+        run: |
+          git config --global user.name ci
+          git config --global user.email ci@example.invalid
+          git config --global init.defaultBranch main
+      - name: Lint skills and prose
+        run: python3 scripts/lint.py
+      - name: Self-tests
+        run: |
+          for f in $(git ls-files '*.py'); do
+            if grep -q 'self-test' "$f"; then
+              echo "== $f"
+              python3 -I "$f" --self-test || exit 1
+            fi
+          done
