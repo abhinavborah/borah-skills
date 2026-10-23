@@ -30,7 +30,7 @@ def page(kind, title, desc, tags, stamp, body, extra=""):
 def build(root, project, by, neutral):
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     day = now[:10]
-    stamp = f"timestamp: {now}" if neutral else f"generated: {{ by: {by}, at: {now} }}"
+    stamp = f"timestamp: {now}" if neutral else f"generated: {{ by: {json.dumps(by)}, at: {now} }}"
     docs = Path(root) / "docs"
     made = []
 

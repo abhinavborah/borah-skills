@@ -87,16 +87,17 @@ def sync_log(d, day, entry):
 
 def new(root, kind, title, status=None, confidence=None, evidence=None, by="agent/unknown", neutral=False):
     d = journal_dir(root)
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(timezone.utc)
+    stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     slug = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:40] or "entry"
-    fname = f"{datetime.now().strftime('%Y_%m_%d_%H%M%S')}_{slug}.md"
+    fname = f"{now.strftime('%Y_%m_%d_%H%M%S')}_{slug}.md"
     path = d / fname
     if path.exists():
         sys.exit(f"{path} exists")
     status = status or ("stable" if kind == "decision" else None)
     fm = ["type: Journal Entry", f"title: {json.dumps(title)}", f"description: {json.dumps(f'{kind}: {title}')}", f"tags: [{kind}]", f"kind: {kind}"]
     fm += [f"{k}: {v}" for k, v in (("status", status), ("confidence", confidence), ("evidence", evidence)) if v]
-    fm.append(f"timestamp: {stamp}" if neutral else f"generated: {{ by: {by}, at: {stamp} }}")
+    fm.append(f"timestamp: {stamp}" if neutral else f"generated: {{ by: {json.dumps(by)}, at: {stamp} }}")
     body = "\n\n".join(f"## {s}\nFILL: " for s in SECTIONS[kind])
     path.write_text("---\n" + "\n".join(fm) + f"\n---\n\n# {title}\n\n{body}\n")
     sync_index(d, title, fname, kind)
@@ -135,11 +136,11 @@ def digest(root, limit=10):
     for f, fm, _ in items:
         if fm.get("kind") == "decision" and live(fm):
             tag = " (proposed)" if fm.get("status") == "draft" else ""
-            out.append(f"  {when(f)}  {fm.get('title')}{tag}  [{fm.get('confidence', '-')}]  {f.name}")
+            out.append(f"  {when(f)}  {fm.get('title') or f.stem}{tag}  [{fm.get('confidence', '-')}]  {f.name}")
     out.append("OPEN QUESTIONS")
-    out += [f"  {when(f)}  {fm.get('title')}  {f.name}" for f, fm, _ in items if fm.get("kind") == "question" and live(fm)]
+    out += [f"  {when(f)}  {fm.get('title') or f.stem}  {f.name}" for f, fm, _ in items if fm.get("kind") == "question" and live(fm)]
     out.append(f"RECENT ({limit})")
-    out += [f"  {when(f)}  {fm.get('kind'):9} {fm.get('title')}" for f, fm, _ in items[:limit]]
+    out += [f"  {when(f)}  {fm.get('kind') or '-':9} {fm.get('title') or f.stem}" for f, fm, _ in items[:limit]]
     out.append(f"SUPERSEDED OR CLOSED, hidden: {sum(1 for _, fm, _ in items if not live(fm))}")
     todo = [f.name for f, _, fill in items if fill]
     if todo:
@@ -172,8 +173,12 @@ def self_test():
             assert "Use Postgres" not in out.split("RECENT")[0], out
             assert "hidden: 1" in out and "INCOMPLETE" in out and "Who owns auth?" in out, out
             assert ("timestamp:" in a.read_text()) == neutral
+            c = new(t, "change", "Odd by", by="human:a, b", neutral=neutral)
+            assert c.name.startswith(datetime.now(timezone.utc).strftime("%Y_%m_%d")), c.name
             errs, warns = okf.validate(Path(t) / "docs")
             assert (errs, warns) == ([], []), (errs, warns)
+            (Path(t) / "docs" / "journal" / "zz_note.md").write_text("---\ntype: Note\n---\nhand written\n")
+            assert "zz_note" in digest(t), "digest must survive entries without kind"
     print("self-test ok")
 
 
