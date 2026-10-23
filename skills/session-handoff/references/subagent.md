@@ -31,13 +31,14 @@ Paths and URLs to read before acting. Include the plan file and spec.
 **Undefined** (your call, leave a reason): what is left to judgment.
 
 ## Ownership
-May write: `src/billing/**`, `tests/billing/**`
+May write: `src/billing/**`, `tests/billing/**`, and this brief file
 Must not touch: everything else. If a change outside is needed, stop and report it.
 
 ## Rules
 - You are a leaf. Do not spawn agents.
 - Do not push. Commit only when told.
 - Do not weaken or delete a test to make it pass.
+- Never write to `docs/journal/`. Put decisions, findings and rejected approaches in your Report. The orchestrator journals them, so the journal has one writer.
 - If the project uses ghost mode, write commit messages with no co-author or generated-with lines. Project settings do not apply in a worktree, so the commit hook may reject them.
 
 ## Done when
@@ -51,4 +52,7 @@ Filled by the subagent.
 - Known limits:
 - Contract changes that affect other work:
 - Questions for the orchestrator:
+- Decisions, findings and rejected approaches for the journal:
+
+Also return this Report as your final message.
 ```

@@ -35,14 +35,14 @@ Show the plan and ask the user to approve it with AskUserQuestion. State the pac
 
 ## 4. Dispatch
 
-1. For each packet, write a brief with the `session-handoff` skill (subagent kind) before dispatch.
+1. For each packet, write a brief with the `session-handoff` skill (subagent kind) before dispatch. Add the brief's own path to that packet's `may_write`. Then commit the plan and the briefs, because a worktree starts from the last commit and would not contain uncommitted files.
 2. Start independent packets together with the Agent tool, one call each in a single message. Packets that write files use worktree isolation. Read-only packets run in place.
 3. Name each subagent after its packet. Right after dispatch, record the returned agent ID and the time in the brief's Agent section. To continue or correct a running or finished subagent, message it by name or ID instead of starting a new one.
 4. The dispatch prompt gives the brief path, the packet name, and these rules: you are a leaf and do not spawn agents; stay inside your ownership; stop and report if the plan looks wrong; fill the Report section of your brief. When `<git-common-dir>/ghost/ghost.json` exists, also: write commit messages with no co-author or generated-with lines.
 
 ## 5. Collect and gate
 
-1. Read each brief's Report section.
+1. Read each subagent's final message, which repeats its Report. The same text sits in its brief on its branch. Subagents do not write to `docs/journal/`; journal their decisions and findings yourself with the `project-log` skill.
 2. Run the merge gate on the packets that wrote files:
 
 ```shell
