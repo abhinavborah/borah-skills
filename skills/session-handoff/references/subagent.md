@@ -1,6 +1,6 @@
 # Subagent handoff template
 
-The orchestrator writes everything above "Report" before dispatch. The subagent fills "Report" when finished, in the same file, so the orchestrator reads one place. Use `type: Subagent Handoff`.
+The orchestrator writes everything above "Report" before dispatch, except the Agent ID and dispatch time, which it fills in right after dispatch. The subagent fills "Report" when finished, in the same file, so the orchestrator reads one place. Use `type: Subagent Handoff`.
 
 ```markdown
 ---
@@ -12,6 +12,12 @@ generated: { by: human:handle, at: 2026-10-24T10:00:00Z }
 ---
 
 # billing_api
+
+## Agent
+- Name: `billing_api` (set at dispatch, matches the filename)
+- Agent ID: filled by the orchestrator from the dispatch result, so the agent can be messaged or resumed
+- Dispatched at: filled by the orchestrator
+- Reports to: the orchestrator session
 
 ## Task
 One or two sentences. What to build or find.
