@@ -1,0 +1,9 @@
+{
+  "skill_name": "session-handoff",
+  "evals": [
+    { "id": 1, "prompt": "context is almost full, write a handoff so the next agent can continue", "expected_output": "Loads session-handoff, writes docs/handoffs/handoff_<ts>.md with the nine sections, syncs index and log." },
+    { "id": 2, "prompt": "write a brief for the auth subagent before I dispatch it", "expected_output": "Writes docs/subagent-handoffs/<agent>_<ts>.md with contract, ownership and an empty Report section." },
+    { "id": 3, "prompt": "summarize what we did in this chat", "expected_output": "Does NOT trigger. A chat summary is not a handoff file.", "should_trigger": false },
+    { "id": 4, "prompt": "compact the conversation", "expected_output": "Does NOT trigger. Compaction is a built-in command.", "should_trigger": false }
+  ]
+}
