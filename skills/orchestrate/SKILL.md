@@ -33,21 +33,31 @@ The ownership table is also a fenced `json ownership` block, which the merge gat
 
 Show the plan and ask the user to approve it with AskUserQuestion. State the packet count. Run at most 5 subagents at once; if there are more packets, run them in waves. The user may lower the cap.
 
+Then check readiness. By default a subagent worktree branches from the default branch on the remote, not from your local commits, so it would miss the plan, its brief and all unpushed work. The preflight checks this and that the tree is clean:
+
+```shell
+python3 "${CLAUDE_SKILL_DIR}/scripts/preflight.py" --root .
+```
+
+If it reports `baseRef`, ask the user, then run it again with `--fix`. That writes `worktree.baseRef = "head"` to `.claude/settings.json`.
+
 ## 4. Dispatch
 
-1. For each packet, write a brief with the `session-handoff` skill (subagent kind) before dispatch. Add the brief's own path to that packet's `may_write`. Then commit the plan and the briefs, because a worktree starts from the last commit and would not contain uncommitted files.
-2. Start independent packets together with the Agent tool, one call each in a single message. Packets that write files use worktree isolation. Read-only packets run in place.
+1. For each packet, write a brief with the `session-handoff` skill (subagent kind) before dispatch. Add the brief's own path to that packet's `may_write`. Then commit the plan and the briefs, and run the preflight again. With `baseRef` set to `head`, a worktree starts from your last commit and would not contain uncommitted files.
+2. Start independent packets together with the Agent tool, one call each in a single message. Packets that write files use the `hack-kit:packet-worker` agent, which runs in its own worktree and cannot spawn agents. Read-only packets run in place.
 3. Name each subagent after its packet. Right after dispatch, record the returned agent ID and the time in the brief's Agent section. To continue or correct a running or finished subagent, message it by name or ID instead of starting a new one.
-4. The dispatch prompt gives the brief path, the packet name, and these rules: you are a leaf and do not spawn agents; stay inside your ownership; stop and report if the plan looks wrong; fill the Report section of your brief. When `<git-common-dir>/ghost/ghost.json` exists, also: write commit messages with no co-author or generated-with lines.
+4. The dispatch prompt gives the brief path and the packet name. The agent definition already carries the rules: stay inside your ownership, commit your work on your branch, never push, fill the Report, no journal writes, no spawning. Subagents inherit the ability to spawn their own by default, so do not use a different agent type for writers.
 
 ## 5. Collect and gate
 
 1. Read each subagent's final message, which repeats its Report. The same text sits in its brief on its branch. Subagents do not write to `docs/journal/`; journal their decisions and findings yourself with the `project-log` skill.
-2. Run the merge gate on the packets that wrote files:
+2. Run the merge gate on the packets that wrote files. Pass each packet's branch and the worktree directory it used, so uncommitted work is caught too:
 
 ```shell
-python3 "${CLAUDE_SKILL_DIR}/scripts/check_ownership.py" --plan docs/subagent-handoffs/plan_<timestamp>.md --base <base-ref> --packet <name>=<branch> --packet <name>=<branch>
+python3 "${CLAUDE_SKILL_DIR}/scripts/check_ownership.py" --plan docs/subagent-handoffs/plan_<timestamp>.md --base <base-ref> --packet <name>=<branch> --worktree <name>=<dir>
 ```
+
+It fails when a packet wrote outside its files (a rename out of another area counts), when two packets touched the same file, when a packet has no commits, or when its worktree is dirty.
 
 3. Run each packet's declared checks yourself. A report is a claim, not evidence.
 

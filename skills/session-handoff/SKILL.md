@@ -16,7 +16,7 @@ If the kind is unclear, ask.
 
 ## Steps
 
-1. **Time.** Run `date +%Y_%m_%d_%H%M%S` for the filename and `date -u +%Y-%m-%dT%H:%M:%SZ` for frontmatter. Never invent either.
+1. **Time.** Run `date -u +%Y_%m_%d_%H%M%S` for the filename and `date -u +%Y-%m-%dT%H:%M:%SZ` for frontmatter. Both are UTC, so names sort the same for everyone. Never invent either.
 2. **Read first.** Read the newest file in the target folder and `git log -n 5`. Write a delta over it, and verify each claim against disk or git before writing it.
 3. **Fill the template.** Session: [references/session.md](references/session.md). Subagent: [references/subagent.md](references/subagent.md).
 4. **Settle the next task.** If it is not clear, write "not yet assigned" with ranked candidates, and ask the user now if one question would settle it.

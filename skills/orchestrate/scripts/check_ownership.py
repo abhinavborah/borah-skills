@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Merge gate for parallel packets: no edits outside ownership, no file touched twice.
 
-Usage: check_ownership.py --plan PLAN.md --base REF --packet NAME=REF [--packet ...] [--repo DIR]
+Usage: check_ownership.py --plan PLAN.md --base REF --packet NAME=REF [--packet ...]
+                          [--worktree NAME=DIR ...] [--repo DIR]
        check_ownership.py --self-test
 
 PLAN.md holds one fenced block that starts with ```json ownership:
   {"packets": {"auth": {"may_write": ["src/auth/**", "tests/auth/**"]}}}
-Each --packet maps a packet name to the branch or commit that holds its work.
+Each --packet maps a packet name to the branch or commit that holds its work. Pass only packets
+that write files. --worktree names the directory a packet worked in, so uncommitted work is caught.
+Renames count as a delete plus an add, so moving a file out of another packet's area is flagged.
+A packet with no commits past the base is reported, since uncommitted work cannot be merged.
 Globs: ** matches across directories, * within one. Exit 1 on any finding.
 """
 import argparse
@@ -38,18 +42,26 @@ def load_plan(path):
 
 
 def changed(repo, base, ref):
-    r = subprocess.run(["git", "-C", repo, "diff", "--name-only", f"{base}...{ref}"], capture_output=True, text=True)
+    r = subprocess.run(["git", "-C", repo, "diff", "--name-only", "--no-renames", f"{base}...{ref}"], capture_output=True, text=True)
     if r.returncode:
         sys.exit(f"git diff failed for {ref}: {r.stderr.strip()}")
     return set(r.stdout.splitlines())
 
 
-def gate(plan, repo, base, refs):
+def gate(plan, repo, base, refs, worktrees=None):
     packets, out, seen = load_plan(plan), [], {}
     for name, ref in refs.items():
         if name not in packets:
             out.append(f"{name}: not in plan")
             continue
+        n = subprocess.run(["git", "-C", repo, "rev-list", "--count", f"{base}..{ref}"], capture_output=True, text=True)
+        if n.returncode or int(n.stdout.strip() or 0) == 0:
+            out.append(f"{name}: no commits past {base} on {ref}; the subagent must commit its work")
+        wt = (worktrees or {}).get(name)
+        if wt:
+            dirty = subprocess.run(["git", "-C", wt, "status", "--porcelain"], capture_output=True, text=True).stdout.strip()
+            if dirty:
+                out.append(f"{name}: uncommitted changes in {wt}")
         allowed = [g2re(g) for g in packets[name]["may_write"]]
         for f in sorted(changed(repo, base, ref)):
             seen.setdefault(f, []).append(name)
@@ -82,6 +94,29 @@ def self_test():
         assert gate(plan, str(r), "main", {"a": "a"}) == []
         out = gate(plan, str(r), "main", {"a": "a", "b": "b"})
         assert out == ["b: wrote src/auth/z.py outside its ownership"], out
+
+        # a rename out of another packet's area is a delete plus an add
+        run("git", "checkout", "-q", "-b", "mv", "main", cwd=r)
+        (r / "src/auth").mkdir(parents=True, exist_ok=True)
+        (r / "src/auth/keep.py").write_text("1\n")
+        run("git", "add", ".", cwd=r)
+        run("git", *env, "commit", "-q", "-m", "seed", cwd=r)
+        run("git", "branch", "seeded", cwd=r)
+        (r / "src/billing").mkdir(parents=True, exist_ok=True)
+        run("git", "mv", "src/auth/keep.py", "src/billing/keep.py", cwd=r)
+        run("git", *env, "commit", "-q", "-m", "move", cwd=r)
+        out = gate(plan, str(r), "seeded", {"b": "mv"})
+        assert out == ["b: wrote src/auth/keep.py outside its ownership"], out
+
+        # no commits, and uncommitted work in a worktree
+        run("git", "branch", "empty", "seeded", cwd=r)
+        assert any("no commits" in x for x in gate(plan, str(r), "seeded", {"a": "empty"}))
+        wt = Path(t) / "wt"
+        run("git", "worktree", "add", "-q", "-b", "wtb", str(wt), "seeded", cwd=r)
+        (wt / "src/auth").mkdir(parents=True, exist_ok=True)
+        (wt / "src/auth/new.py").write_text("1\n")
+        out = gate(plan, str(r), "seeded", {"a": "wtb"}, {"a": str(wt)})
+        assert any("uncommitted" in x for x in out) and any("no commits" in x for x in out), out
     print("self-test ok")
 
 
@@ -90,13 +125,14 @@ if __name__ == "__main__":
     p.add_argument("--plan")
     p.add_argument("--base")
     p.add_argument("--packet", action="append", default=[])
+    p.add_argument("--worktree", action="append", default=[])
     p.add_argument("--repo", default=".")
     p.add_argument("--self-test", action="store_true")
     a = p.parse_args()
     if a.self_test:
         self_test()
     elif a.plan and a.base and a.packet:
-        found = gate(a.plan, a.repo, a.base, dict(x.split("=", 1) for x in a.packet))
+        found = gate(a.plan, a.repo, a.base, dict(x.split("=", 1) for x in a.packet), dict(x.split("=", 1) for x in a.worktree))
         print("\n".join(found) or "ownership ok")
         sys.exit(1 if found else 0)
     else:
