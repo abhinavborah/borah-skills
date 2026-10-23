@@ -34,4 +34,4 @@ Judges remember the demo. A clear demo of a simple project beats a confusing dem
 - Everyone knows who speaks when.
 - Phone and laptop charged, notifications off, screen resolution tested.
 
-Based on judging advice from the JetBrains x Codex Hackathon notes (2026-06) and similar judge write-ups. Checked 2026-10-24.
+Based on judging advice in [How to Win a Hackathon: Notes From the Judging Table](https://blog.jetbrains.com/ai/2026/06/how-to-win-a-hackathon-notes-from-the-judging-table/) (JetBrains, 2026-06) and similar judge write-ups. Checked 2026-10-24.

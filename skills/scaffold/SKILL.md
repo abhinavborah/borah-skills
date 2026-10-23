@@ -36,7 +36,8 @@ Only if the user asked. Run the `research` skill for the idea: current stable op
 In this order. Report each step as it finishes.
 
 1. `git init` if needed.
-2. Docs bundle (`research`, `specs`, `journal`, `handoffs`, `subagent-handoffs`):
+2. Stack bootstrap, if confirmed. It goes first because generators refuse to run in a folder that holds files they do not expect (`create-next-app` rejects `CLAUDE.md` and `AGENTS.md`), and some wipe it (`create-vite --overwrite` deletes `docs/`). Run the generator in the empty folder. If the folder must hold files already, generate into a temporary folder and move the result in.
+3. Docs bundle (`research`, `specs`, `journal`, `handoffs`, `subagent-handoffs`):
 
 ```shell
 python3 "${CLAUDE_SKILL_DIR}/scripts/scaffold_docs.py" --root . --project "<name>" --by "human:<handle>" [--neutral]
@@ -45,16 +46,15 @@ python3 "${CLAUDE_SKILL_DIR}/../okf-docs/scripts/okf_validate.py" --strict docs
 
 Add `--neutral` when ghost level `neutral-docs` is chosen.
 
-3. Agent files, from [references/rules_file.md](references/rules_file.md). If both are chosen, put the content in `AGENTS.md` and make `CLAUDE.md` a single line: `@AGENTS.md`. If both are declined and the user agrees, write the same content to `.claude/rules/hack-kit.md` instead. Rules files without path scopes load at the start of every session, and `.claude/` stays untracked.
-4. Stack bootstrap, if confirmed.
-5. Ghost mode, if chosen. Always last, so the files above exist to be excluded:
+4. Agent files, from [references/rules_file.md](references/rules_file.md). If both are chosen, put the content in `AGENTS.md` and make `CLAUDE.md` a single line: `@AGENTS.md`. If both are declined and the user agrees, write the same content to `.claude/rules/hack-kit.md` instead. Rules files without path scopes load at the start of every session, and `.claude/` stays untracked.
+5. Ghost mode, if chosen. Always last, so the files above exist to be excluded and any hook manager the generator installed (husky, for example) is already in place:
 
 ```shell
 python3 "${CLAUDE_SKILL_DIR}/scripts/ghost.py" apply --root . --levels all
 python3 "${CLAUDE_SKILL_DIR}/scripts/ghost.py" check
 ```
 
-Use `--levels attribution,untracked` style lists for chosen levels. With ghost off, still run `--levels none`, which only keeps `.claude/` out of git through `.git/info/exclude`, never `.gitignore`.
+Use `--levels attribution,untracked` style lists for chosen levels. Commits made before this step are not held against the project: the command records the current commit as a baseline. If it warns that an existing commit-msg hook is in use, add the line it prints to that hook. With ghost off, still run `--levels none`, which only keeps `.claude/` out of git through `.git/info/exclude`, never `.gitignore`.
 
 Ghost mode applies to this clone only. Its script and chosen levels live in the git common dir, so linked worktrees share them. Project settings do not reach a worktree, so recommend the `checker` level together with `attribution`: the hook still blocks agent trailers where the setting does not apply.
 

@@ -30,7 +30,7 @@ Start before touching code.
 2. **Shrink it.** Remove steps, input and code until the smallest case still fails. Bisect inputs, code or git history when the cause is far away.
 3. **Hypothesize and test.** State one hypothesis. Change one variable. Confirm or rule it out. Add temporary logging, tagged so it can be found and removed.
 4. **Write the regression test** at the lowest seam that still catches the cause. Run it. It must fail now.
-5. **Fix the root cause.** Before editing, search for every caller of the code you are about to change. Fix it once where all callers route through, not in the one path the report names. A guard that hides the symptom is not a fix.
+5. **Fix the root cause.** Before editing, search for every caller of the code you are about to change. Change the shared code so every caller is covered, not only the path named in the report. A guard that hides the symptom is not a fix.
 6. **Verify.** Re-run the original end-to-end reproduction, the new test and the full suite. Remove the temporary logging.
 
 Never skip, disable or loosen a failing test to get green. Never call a flaky failure fixed because it passed once.

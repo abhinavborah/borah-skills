@@ -30,8 +30,8 @@ A probe passes when it returns a result. It fails on an error, a timeout, a miss
 ## Version checks
 
 ```shell
-npm view <pkg> dist-tags --json            # latest and other tags
-npm view <pkg> time --json | tail -5       # release dates
+v=$(npm view <pkg> dist-tags.latest)      # the stable tag, not canary or next
+npm view <pkg> time.$v                     # its release date
 curl -s https://pypi.org/pypi/<pkg>/json   # info.version, releases
 gh api repos/<owner>/<repo>/releases/latest --jq '.tag_name,.published_at'
 ```
