@@ -18,6 +18,7 @@ Restart Claude Code after installing. Skills appear as `/hack-kit:<skill>`.
 | `scaffold` | Set up a project: git, `docs/` bundle, rules file, researched stack, optional GitHub repo and ghost mode. Manual only, asks before creating anything. |
 | `okf-docs` | Write and validate the `docs/` folder as an OKF v0.2 bundle. |
 | `research` | Run dated, sourced research. Tests which tools work, falls back when one fails, saves a note. |
+| `project-log` | Record decisions, findings, changes and rejected approaches in `docs/journal/`. A plugin hook reminds after commits that have no entry. |
 | `session-handoff` | Write a timestamped handoff for the next session or for one subagent. |
 | `orchestrate` | Split work into packets with disjoint file ownership, dispatch up to 5 subagents, gate the merge. |
 | `spec-interview` | Turn an idea into a testable spec, or stress-test a plan. |
@@ -36,6 +37,7 @@ Restart Claude Code after installing. Skills appear as `/hack-kit:<skill>`.
 ```
 .claude-plugin/    plugin and marketplace manifests
 skills/<name>/     one SKILL.md per skill, with optional references/ and scripts/
+hooks/             the journal reminder hook
 scripts/lint.py    skill linter used before every commit
 docs/design.md     how the skills are structured and why
 ```

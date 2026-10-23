@@ -39,4 +39,5 @@ Say which tool failed and why, in one line. Try the next tool in the order. Reco
 ## 5. Save and report
 
 1. Write the note with the template in [references/note.md](references/note.md) to `docs/research/<topic>.md`, using the `okf-docs` skill for frontmatter, index, log and validation.
-2. Report the findings to the user in plain language, with links. When the research feeds a choice (library, algorithm, stack), present the options and a recommendation, and wait for the user's decision before acting on it.
+2. If the project has `docs/journal/`, record the conclusion that drives a choice with the `project-log` skill, linking the note.
+3. Report the findings to the user in plain language, with links. When the research feeds a choice (library, algorithm, stack), present the options and a recommendation, and wait for the user's decision before acting on it.

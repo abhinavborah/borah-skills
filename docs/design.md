@@ -56,3 +56,22 @@ Ghost mode removes agent traces from a project. It is a set of independent level
 | `checker` | a deterministic script scans tracked files and commit messages |
 
 The script and the chosen levels live in the git common directory, so linked worktrees used by subagents share them and nothing new is tracked. Ghost mode applies per clone. Project settings such as `attribution` do not reach a worktree, so the `checker` hook is the backstop there.
+
+## Journal
+
+`docs/journal/` records why things happened: decisions, findings, changes, rejected approaches and open questions, one file per entry. Git keeps what changed. Research dated 2026-10-24.
+
+Model, from decision-record practice ([Fowler, 2026-03](https://www.martinfowler.com/bliki/ArchitectureDecisionRecord.html), [Azure Well-Architected, 2026-04](https://learn.microsoft.com/en-us/azure/well-architected/architect-role/architecture-decision-record), [AWS guidance](https://docs.aws.amazon.com/pdfs/prescriptive-guidance/latest/architectural-decision-records/architectural-decision-records.pdf), [MADR](https://adr.github.io/madr/)) and the progress-journal pattern ([Hexlet](https://mokevnin.github.io/agentic-coding-design-patterns/en/progress-file.html)):
+
+- One decision per entry, with context, the reason, alternatives and consequences.
+- Accepted entries are never edited. A new entry supersedes the old one, and both link to each other. In OKF terms, `draft` is proposed, `stable` is accepted and `deprecated` is superseded.
+- Entries are named by timestamp, not by sequence number, so parallel subagents cannot collide on the next number.
+- Findings carry an evidence strength and a scope, because agents can carry forward a conclusion that its evidence does not support ([From Experiments to Decisions, 2026-09](https://www.alphaxiv.org/abs/2609.13299)).
+- Reading goes through a digest of active decisions, so superseded entries and old noise do not bloat context.
+
+Trigger, from Anthropic's guidance ([memory docs](https://code.claude.com/docs/en/memory.md), [steering article, 2026-06](https://claude.com/resources/articles/steering-claude-code-skills-hooks-rules-subagents-and-more)): instructions and skills are context, and a model can skip them in a long session or under pressure. Anything that must happen at a fixed point belongs in a hook. But a hook cannot write the reason, which needs judgment. So the design layers two parts:
+
+1. The `project-log` skill and a line in the project rules file make the model write entries when a decision, finding or rejection happens.
+2. A plugin `PostToolUse` hook on `git commit` is the backstop. It adds a one-line reminder when a commit carries no entry and none was written in the last 20 minutes. It is silent in projects without `docs/journal/`, adds nothing to the repository, and also runs inside subagents.
+
+The hook only nudges. It never writes content itself, because an auto-written reason would be unsourced text stored as memory. A field report on file-based agent memory ([claude-code#68546](https://github.com/anthropics/claude-code/issues/68546)) found the same failure.

@@ -26,6 +26,7 @@ If the kind is unclear, ask.
 ## Content rules
 
 - Reference plans, specs, issues and diffs by path or URL. Do not copy them.
+- If the project has `docs/journal/`, run the `project-log` digest and link the active decisions and the entries from this session instead of retelling them.
 - Mark each decision as the user's choice or an agent proposal. Never present a proposal as decided.
 - List tools, plugins and skills that worked, those that failed with the shortest decisive error, and the order to try them.
 - Name the preferences that bind the work: tone, style, process rules the user stated.

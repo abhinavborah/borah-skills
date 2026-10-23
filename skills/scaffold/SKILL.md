@@ -36,7 +36,7 @@ Only if the user asked. Run the `research` skill for the idea: current stable op
 In this order. Report each step as it finishes.
 
 1. `git init` if needed.
-2. Docs bundle:
+2. Docs bundle (`research`, `specs`, `journal`, `handoffs`, `subagent-handoffs`):
 
 ```shell
 python3 "${CLAUDE_SKILL_DIR}/scripts/scaffold_docs.py" --root . --project "<name>" --by "human:<handle>" [--neutral]

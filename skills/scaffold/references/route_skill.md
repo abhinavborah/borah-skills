@@ -21,6 +21,7 @@ Load the skill that matches the situation, then follow it.
 | UI looks plain, cluttered or static | `hack-kit:better-ui` |
 | Writing docs, READMEs or error text | `hack-kit:ste` |
 | Adding or editing anything under `docs/` | `hack-kit:okf-docs` |
+| Recording a decision, finding, change or rejected approach | `hack-kit:project-log` |
 | Stopping, or handing work to another agent | `hack-kit:session-handoff` |
 | Work splits into independent parts | `hack-kit:orchestrate` |
 | Preparing the demo, pitch or submission | `hack-kit:demo-pitch` |

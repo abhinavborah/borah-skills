@@ -52,3 +52,4 @@ Then write the spec with [references/spec.md](references/spec.md), following the
 - One recommendation per decision, with the reason. Not a survey of options.
 - Never mark a requirement done or approved on the user's behalf.
 - Keep the spec to what and why. How belongs to the build.
+- Record decisions the user makes during the interview with the `project-log` skill when `docs/journal/` exists.

@@ -33,9 +33,11 @@ A spike produces an answer, not code to ship. Without a question it is just unpl
    - What was not explored
    - Decision: proceed, change approach, or stop
 
-7. **Hand off behaviors, not code.** List the behaviors the spike proved. They become the first tests for `test-first`.
+7. **Log the decision** with the `project-log` skill if the project has `docs/journal/`, linking the spike result.
 
-8. **Delete the spike**, or leave `spikes/` uncommitted until the build is done. Ask which.
+8. **Hand off behaviors, not code.** List the behaviors the spike proved. They become the first tests for `test-first`.
+
+9. **Delete the spike**, or leave `spikes/` uncommitted until the build is done. Ask which.
 
 ## Rules
 

@@ -69,4 +69,4 @@ When reassigning, pass the brief and failure evidence, not the whole earlier con
 
 ## 7. Close
 
-Write a session handoff with the `session-handoff` skill and report to the user what merged, what failed, and what is left.
+Record the plan's key decisions and any failure causes with the `project-log` skill when `docs/journal/` exists. Write a session handoff with the `session-handoff` skill and report to the user what merged, what failed, and what is left.
