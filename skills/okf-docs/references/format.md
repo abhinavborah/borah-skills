@@ -14,7 +14,7 @@ generated: { by: human:handle, at: 2026-10-24T10:00:00Z }
 Body. Link to related concepts like [this one](../research/other_note.md).
 ```
 
-With `neutral-docs`, replace the `generated` line with `timestamp: 2026-10-24T10:00:00Z`.
+With `neutral-docs`, replace the `generated` line with `timestamp: 2026-10-24T10:00:00Z`. The validator notes that `timestamp` is the older v0.1 field, which v0.2 consumers still accept. Quote `by` if it holds a comma, for example `by: "human:a, b"`.
 
 ## Optional families
 
