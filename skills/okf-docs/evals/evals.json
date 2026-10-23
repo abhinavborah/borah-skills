@@ -1,0 +1,9 @@
+{
+  "skill_name": "okf-docs",
+  "evals": [
+    { "id": 1, "prompt": "add a decision note about choosing Postgres to the docs folder", "expected_output": "Loads okf-docs, writes a snake_case concept with frontmatter, updates index.md and log.md, runs the validator." },
+    { "id": 2, "prompt": "check that our docs bundle is valid OKF", "expected_output": "Runs okf_validate.py on docs and reports errors and warnings." },
+    { "id": 3, "prompt": "write the handoff for the next agent", "expected_output": "Does NOT trigger okf-docs first. Triggers session-handoff, which calls okf-docs for the sync.", "should_trigger": false },
+    { "id": 4, "prompt": "rewrite this README paragraph to be clearer", "expected_output": "Does NOT trigger. Prose style belongs to ste.", "should_trigger": false }
+  ]
+}
