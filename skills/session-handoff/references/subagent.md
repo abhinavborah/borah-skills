@@ -39,7 +39,7 @@ Must not touch: everything else. If a change outside is needed, stop and report 
 - Commit your finished work on your branch. Do not push.
 - Do not weaken or delete a test to make it pass.
 - Never write to `docs/journal/`. Put decisions, findings and rejected approaches in your Report. The orchestrator journals them, so the journal has one writer.
-- If the project uses ghost mode, write commit messages with no co-author or generated-with lines. Project settings do not apply in a worktree, so the commit hook may reject them.
+- If the project uses ghost mode, write commit messages with no co-author or generated-with lines. A setting does not stop a trailer you write yourself, so the commit hook may reject it.
 
 ## Done when
 Commands that must pass, for example `pnpm test billing`.

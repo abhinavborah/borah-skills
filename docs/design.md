@@ -57,6 +57,8 @@ Ghost mode removes agent traces from a project. It is a set of independent level
 
 The script and the chosen levels live in the git common directory, so linked worktrees used by subagents share them and nothing new is tracked. Ghost mode applies per clone. Project settings such as `attribution` do not reach a worktree: in a test on 2026-10-24 a commit from a linked worktree still carried a co-author trailer although the main checkout's project settings blanked it, while a commit from the main checkout did not. The `checker` hook, whose script lives in the common dir, is therefore the real backstop in worktrees, and subagent briefs tell the agent to leave such lines out.
 
+Addendum 2026-10-24: a rerun narrows that claim. With the user-level `attribution` already blank and a custom trailer set in project settings, 3 of 3 subagent commits carried the project trailer, including one made in a worktrunk worktree that had no `.claude/` folder. Subagents appear to inherit the parent session's settings. A session started inside a worktree (`claude -w`) lost the project settings in 1 of 1 run without a `.worktreeinclude` file, and received them in 1 of 1 run with one that lists `.claude/settings.json`. A subagent worktree also received the file when the include file was present. The earlier trailer may have come from the model and not from a missing setting, because a setting does not stop a trailer the model writes itself. The `checker` recommendation stands. `.worktreeinclude` is a manual option for `claude -w` users and is not written by ghost mode.
+
 ## Journal
 
 `docs/journal/` records why things happened: decisions, findings, changes, rejected approaches and open questions, one file per entry. Git keeps what changed. Research dated 2026-10-24.
