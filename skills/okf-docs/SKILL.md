@@ -14,7 +14,7 @@ This skill owns the docs format. Other skills call it and do not restate these r
 - Filenames are `snake_case.md`. `index.md` and `log.md` are reserved.
 - Every concept has `type` (required), `title`, `description`, `tags`, plus one time field.
 - Time field, by ghost setting:
-  - If `.claude/ghost.json` lists `neutral-docs`, write `timestamp`.
+  - If `$(git rev-parse --path-format=absolute --git-common-dir)/ghost/ghost.json` lists `neutral-docs`, write `timestamp`.
   - Otherwise write `generated: { by: <actor>, at: <time> }`. Actor is `human:<handle>` for a person, `<producer>/<version>` for an agent.
 - Times are UTC with a suffix: `date -u +%Y-%m-%dT%H:%M:%SZ`. Never invent one.
 - `index.md` and `log.md` carry frontmatter too (`type: Bundle Index`, `type: Change Log`). The root `index.md` also has `okf_version: "0.2"`. This extends the spec on purpose.

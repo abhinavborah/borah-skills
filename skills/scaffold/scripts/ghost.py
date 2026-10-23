@@ -14,7 +14,8 @@ Levels (independent):
   checker       a commit-msg hook runs this script
 
 .claude/ is always excluded through .git/info/exclude and never named in .gitignore.
-Chosen levels live in .claude/ghost.json, which is untracked. Applies per clone.
+--levels none excludes only .claude/. The script, hook config and chosen levels live in
+<git-common-dir>/ghost/, shared by every linked worktree and never tracked. Applies per clone.
 """
 import json
 import os
@@ -38,7 +39,7 @@ MARKERS = [
     r"\bai[- ]generated\b",
 ]
 MARK = re.compile("|".join(f"(?:{m})" for m in MARKERS), re.I)
-HOOK = '#!/bin/sh\nexec python3 "$(git rev-parse --show-toplevel)/.claude/ghost.py" check-msg "$1"\n'
+HOOK = '#!/bin/sh\nexec python3 "$(git rev-parse --path-format=absolute --git-common-dir)/ghost/ghost.py" check-msg "$1"\n'
 
 
 def git(root, *args):
@@ -46,8 +47,13 @@ def git(root, *args):
     return r.returncode, r.stdout
 
 
+def cfgdir(root):
+    """Config lives in the git common dir so every linked worktree shares it."""
+    return Path(git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")[1].strip()) / "ghost"
+
+
 def load(root):
-    p = Path(root) / ".claude" / "ghost.json"
+    p = cfgdir(root) / "ghost.json"
     cfg = json.loads(p.read_text()) if p.exists() else {}
     return cfg.get("levels", LEVELS), cfg.get("agent_dirs", AGENT_DIRS), cfg.get("extra_markers", [])
 
@@ -56,12 +62,13 @@ def apply(root, levels):
     root = Path(root).resolve()
     if git(root, "rev-parse", "--git-dir")[0]:
         sys.exit(f"{root} is not a git repository")
-    levels = LEVELS if levels == ["all"] else levels
+    levels = {"all": LEVELS, "none": []}.get(",".join(levels), levels)
     bad = [l for l in levels if l not in LEVELS]
     if bad:
         sys.exit(f"unknown levels: {bad}")
-    (root / ".claude").mkdir(exist_ok=True)
-    (root / ".claude" / "ghost.json").write_text(json.dumps({"levels": levels, "agent_dirs": AGENT_DIRS}, indent=2) + "\n")
+    cd = cfgdir(root)
+    cd.mkdir(parents=True, exist_ok=True)
+    (cd / "ghost.json").write_text(json.dumps({"levels": levels, "agent_dirs": AGENT_DIRS}, indent=2) + "\n")
     lines = [".claude/"] + (["CLAUDE.md", "AGENTS.md"] if "untracked" in levels else [])
     exclude = Path(git(root, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude")[1].strip())
     exclude.parent.mkdir(parents=True, exist_ok=True)
@@ -69,12 +76,13 @@ def apply(root, levels):
     exclude.write_text("\n".join(have + [l for l in lines if l not in have]) + "\n")
     if "attribution" in levels:
         sp = root / ".claude" / "settings.json"
+        sp.parent.mkdir(exist_ok=True)
         cfg = json.loads(sp.read_text()) if sp.exists() else {}
         cfg["attribution"] = {"commit": "", "pr": "", "sessionUrl": False}
         sp.write_text(json.dumps(cfg, indent=2) + "\n")
     if "checker" in levels:
         me = Path(__file__).resolve()
-        dest = root / ".claude" / "ghost.py"
+        dest = cd / "ghost.py"
         if me != dest.resolve():
             shutil.copy(me, dest)
         hook = Path(git(root, "rev-parse", "--path-format=absolute", "--git-path", "hooks/commit-msg")[1].strip())
@@ -84,8 +92,8 @@ def apply(root, levels):
             hook.parent.mkdir(parents=True, exist_ok=True)
             hook.write_text(HOOK)
             hook.chmod(hook.stat().st_mode | stat.S_IXUSR)
-    tracked = [f for f in git(root, "ls-files", ".claude", "CLAUDE.md", "AGENTS.md")[1].split() if f]
-    print(f"ghost levels: {','.join(levels)}")
+    tracked = [f for f in git(root, "ls-files", ".claude", "CLAUDE.md", "AGENTS.md")[1].splitlines() if f]
+    print(f"ghost levels: {','.join(levels) or 'none'}")
     if tracked:
         print(f"already tracked, run git rm --cached on: {' '.join(tracked)}")
 
@@ -115,7 +123,9 @@ def check(root):
             if re.search(r"\.claude|CLAUDE\.md|AGENTS\.md", line):
                 out.append(f".gitignore:{n}: names an agent path; use .git/info/exclude")
     if "attribution" in levels:
-        sp = root / ".claude" / "settings.json"
+        # a linked worktree has no .claude/, so fall back to the main checkout's
+        sps = [root / ".claude" / "settings.json", cfgdir(root).parent.parent / ".claude" / "settings.json"]
+        sp = next((s for s in sps if s.exists()), sps[0])
         a = json.loads(sp.read_text()).get("attribution", {}) if sp.exists() else {}
         if a.get("commit") != "" or a.get("pr") != "" or a.get("sessionUrl") is not False:
             out.append(".claude/settings.json: attribution is not blank")
@@ -145,7 +155,7 @@ def check(root):
 
 
 def check_msg(path):
-    levels, _, extra = load(git(Path.cwd(), "rev-parse", "--show-toplevel")[1].strip() or ".")
+    levels, _, extra = load(Path.cwd())
     if "neutral-code" not in levels and "attribution" not in levels:
         return []
     pat = re.compile(MARK.pattern + "".join(f"|(?:{m})" for m in extra), re.I)
@@ -169,7 +179,7 @@ def self_test():
         (r / "CLAUDE.md").write_text("rules\n")
         run("git", "add", "app.py", cwd=r)
         run("python3", str(me), "apply", "--root", str(r), "--levels", "all", cwd=r)
-        for p in (".claude/ghost.json", ".claude/settings.json", ".claude/ghost.py", ".git/hooks/commit-msg"):
+        for p in (".git/ghost/ghost.json", ".claude/settings.json", ".git/ghost/ghost.py", ".git/hooks/commit-msg"):
             assert (r / p).exists(), p
         ex = (r / ".git/info/exclude").read_text()
         assert ".claude/" in ex and "CLAUDE.md" in ex
@@ -184,6 +194,33 @@ def self_test():
         run("git", "commit", "-q", "--no-verify", "-m", "more", cwd=r)
         out = "\n".join(check(r))
         assert "agent marker" in out and ".gitignore:1" in out, out
+
+    # linked worktrees (where orchestrate dispatches writers) share hook and config
+    with tempfile.TemporaryDirectory() as t:
+        r, wt = Path(t) / "main", Path(t) / "wt"
+        r.mkdir()
+        run("git", "init", "-q", "-b", "main", cwd=r)
+        (r / "app.py").write_text("print('hi')\n")
+        run("git", "add", "app.py", cwd=r)
+        run("python3", str(me), "apply", "--root", str(r), "--levels", "all", cwd=r)
+        assert run("git", "commit", "-q", "-m", "add app", cwd=r).returncode == 0
+        run("git", "worktree", "add", "-q", "-b", "side", str(wt), cwd=r)
+        assert run("git", "commit", "-q", "--allow-empty", "-m", "fine", cwd=wt).returncode == 0
+        bad = run("git", "commit", "-q", "--allow-empty", "-m", "x\n\nGenerated with Claude Code", cwd=wt)
+        assert bad.returncode != 0, "hook must also block inside a worktree"
+        assert check(wt) == [], check(wt)
+
+    # ghost off: only .claude/ is excluded and nothing is checked
+    with tempfile.TemporaryDirectory() as t:
+        r = Path(t)
+        run("git", "init", "-q", cwd=r)
+        run("python3", str(me), "apply", "--root", str(r), "--levels", "none", cwd=r)
+        lines = [l for l in (r / ".git/info/exclude").read_text().splitlines() if l and not l.startswith("#")]
+        assert lines == [".claude/"], lines
+        (r / "n.md").write_text("Generated with Claude Code\n")
+        run("git", "add", "n.md", cwd=r)
+        run("git", "commit", "-q", "-m", "n", cwd=r)
+        assert check(r) == [], check(r)
     print("self-test ok")
 
 
