@@ -26,6 +26,7 @@ Rules that follow:
 
 - Descriptions name concrete triggers and a boundary ("not for X, use Y"). Overlapping pairs get distinct verbs.
 - Selection is made explicit in the project: a routing table in the project rules file, or a project-local router skill when that file is declined. The table points at skills by name.
+- The skill listing always keeps every name but drops descriptions when it exceeds its budget (1% of the context window by default), least-used skills first ([skills docs](https://code.claude.com/docs/en/skills.md), troubleshooting). In a test session with many skills installed, only one hack-kit description survived and the rest were matched by name. So names must say what the skill does, and the key use case goes first in every description. Users with large libraries can raise `skillListingBudgetFraction`.
 - Only `scaffold` sets `disable-model-invocation: true`. That flag also blocks preloading into subagents, and a router table cannot call a skill the model may not load. Every other skill stays loadable.
 
 ## Composition
