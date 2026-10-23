@@ -1,0 +1,9 @@
+{
+  "skill_name": "research",
+  "evals": [
+    { "id": 1, "prompt": "which database should we use for a two-day hackathon app? check what is current", "expected_output": "Runs preflight, tells the user which tools work, searches, saves a dated note, reports options and waits for a decision." },
+    { "id": 2, "prompt": "what do people say about this framework on reddit this month", "expected_output": "Routes to last30days, falls back to web search if it is unavailable, and reports the failure." },
+    { "id": 3, "prompt": "find where the login handler is defined in this repo", "expected_output": "Does NOT trigger. Local code search, not research.", "should_trigger": false },
+    { "id": 4, "prompt": "explain how a closure works", "expected_output": "Does NOT trigger. General knowledge, no current facts needed.", "should_trigger": false }
+  ]
+}
