@@ -1,0 +1,9 @@
+{
+  "skill_name": "orchestrate",
+  "evals": [
+    { "id": 1, "prompt": "build the auth, billing and settings pages in parallel, they do not share files", "expected_output": "Writes a plan with an ownership table, asks for approval, dispatches at most 5 subagents with briefs." },
+    { "id": 2, "prompt": "the three agents finished, check they stayed in their own files and merge", "expected_output": "Runs check_ownership.py, runs declared checks, merges one at a time without pushing." },
+    { "id": 3, "prompt": "rename this function everywhere", "expected_output": "Does NOT trigger. One sequential change.", "should_trigger": false },
+    { "id": 4, "prompt": "add a field to the user model then update the form that uses it", "expected_output": "Does NOT trigger. The second step depends on the first.", "should_trigger": false }
+  ]
+}
