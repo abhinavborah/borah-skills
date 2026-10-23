@@ -36,6 +36,10 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/okf_validate.py" docs
 
 Fix every ERROR. Fix WARNINGs unless there is a reason. Add `--strict` to fail on warnings.
 
+## New folder
+
+When a skill writes into a folder that has no `index.md` and `log.md`, create both first (types `Bundle Index` and `Change Log`) and add a line for the folder to the parent `index.md`. A concept at the `docs/` root, such as `pitch.md`, goes in the root `index.md`.
+
 ## Rules
 
 - Do not put concept content in `index.md`. It holds links and one-line hooks.

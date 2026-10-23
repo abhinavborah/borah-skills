@@ -14,16 +14,16 @@ Load the skill that matches the situation, then follow it.
 
 | Situation | Skill |
 |---|---|
-| Idea is vague, or a plan needs stress-testing | `spec-interview` |
-| Need current facts, versions, prior art | `research` |
-| Unsure about a design or data model | `spike` |
-| Building a feature or fixing a bug | `test-first` |
-| UI looks plain, cluttered or static | `better-ui` |
-| Writing docs, READMEs or error text | `ste` |
-| Adding or editing anything under `docs/` | `okf-docs` |
-| Stopping, or handing work to another agent | `session-handoff` |
-| Work splits into independent parts | `orchestrate` |
-| Preparing the demo, pitch or submission | `demo-pitch` |
+| Idea is vague, or a plan needs stress-testing | `hack-kit:spec-interview` |
+| Need current facts, versions, prior art | `hack-kit:research` |
+| Unsure about a design or data model | `hack-kit:spike` |
+| Building a feature or fixing a bug | `hack-kit:test-first` |
+| UI looks plain, cluttered or static | `hack-kit:better-ui` |
+| Writing docs, READMEs or error text | `hack-kit:ste` |
+| Adding or editing anything under `docs/` | `hack-kit:okf-docs` |
+| Stopping, or handing work to another agent | `hack-kit:session-handoff` |
+| Work splits into independent parts | `hack-kit:orchestrate` |
+| Preparing the demo, pitch or submission | `hack-kit:demo-pitch` |
 
 Docs live in `docs/` as an OKF bundle. Do not push or publish without asking.
 ````

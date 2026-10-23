@@ -41,7 +41,7 @@ Rules that follow:
 
 - Skills are written against failures, not imagined needs: observe the gap, write the minimum, test on a fresh session ([authoring guide](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices), [Authoring Agent Skills, 2026-07](https://arxiv.org/html/2607.25032v1)).
 - Over 99% of surveyed `SKILL.md` files carry at least one authoring smell ([From Anatomy to Smells, 2026-07](https://www.alphaxiv.org/abs/2607.01456)), so `scripts/lint.py` runs before every commit.
-- Each skill ships `evals/evals.json` with at least two prompts that should trigger it and two near misses that should not.
+- Each skill ships `evals/evals.json` with two prompts that should trigger it and two near misses that should not. These files document intended triggers. They are not yet runnable: the native runner (`claude plugin eval`) expects `case.yaml` or `prompt.md` plus `graders/`, so converting them is future work.
 
 ## Ghost mode
 

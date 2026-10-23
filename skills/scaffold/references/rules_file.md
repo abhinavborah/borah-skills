@@ -17,7 +17,7 @@ Write to `AGENTS.md` (and a one-line `CLAUDE.md` containing `@AGENTS.md` if both
 
 ## Docs
 
-`docs/` is an OKF bundle. Use the `okf-docs` skill for any change there. Research notes go in `docs/research/`, handoffs in `docs/handoffs/` and `docs/subagent-handoffs/`.
+`docs/` is an OKF bundle. Use the `hack-kit:okf-docs` skill for any change there. Specs go in `docs/specs/`, research notes in `docs/research/`, handoffs in `docs/handoffs/` and `docs/subagent-handoffs/`.
 
 ## Working rules
 
@@ -30,14 +30,14 @@ Write to `AGENTS.md` (and a one-line `CLAUDE.md` containing `@AGENTS.md` if both
 
 | Situation | Skill |
 |---|---|
-| Idea is vague, or a plan needs stress-testing | `spec-interview` |
-| Need current facts, versions, prior art | `research` |
-| Unsure about a design or data model | `spike` |
-| Building a feature or fixing a bug | `test-first` |
-| UI looks plain, cluttered or static | `better-ui` |
-| Writing docs, READMEs or error text | `ste` |
-| Adding or editing anything under `docs/` | `okf-docs` |
-| Stopping, or handing work to another agent | `session-handoff` |
-| Work splits into independent parts | `orchestrate` |
-| Preparing the demo, pitch or submission | `demo-pitch` |
+| Idea is vague, or a plan needs stress-testing | `hack-kit:spec-interview` |
+| Need current facts, versions, prior art | `hack-kit:research` |
+| Unsure about a design or data model | `hack-kit:spike` |
+| Building a feature or fixing a bug | `hack-kit:test-first` |
+| UI looks plain, cluttered or static | `hack-kit:better-ui` |
+| Writing docs, READMEs or error text | `hack-kit:ste` |
+| Adding or editing anything under `docs/` | `hack-kit:okf-docs` |
+| Stopping, or handing work to another agent | `hack-kit:session-handoff` |
+| Work splits into independent parts | `hack-kit:orchestrate` |
+| Preparing the demo, pitch or submission | `hack-kit:demo-pitch` |
 ````

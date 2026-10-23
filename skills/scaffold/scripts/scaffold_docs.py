@@ -15,6 +15,7 @@ from pathlib import Path
 
 DIRS = {
     "research": "Dated, sourced research notes.",
+    "specs": "Specs written from interviews. Each requirement has a checkable acceptance criterion.",
     "handoffs": "Timestamped session handoffs. The newest file is read first.",
     "subagent-handoffs": "Briefs and reports for dispatched subagents.",
 }
@@ -57,7 +58,7 @@ def self_test():
     for neutral in (False, True):
         with tempfile.TemporaryDirectory() as t:
             made = build(t, "demo", "human:tester", neutral)
-            assert len(made) == 8, made
+            assert len(made) == 2 + 2 * len(DIRS), made
             assert build(t, "demo", "human:tester", neutral) == [], "must not overwrite"
             errs, warns = okf.validate(Path(t) / "docs")
             assert (errs, warns) == ([], []), (errs, warns)
