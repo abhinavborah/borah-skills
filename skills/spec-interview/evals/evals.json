@@ -4,6 +4,6 @@
     { "id": 1, "prompt": "I want to build something for the health track but I only have a rough idea, help me turn it into a spec", "expected_output": "Starts Draft mode, interviews in grouped batches, writes docs/specs/<name>.md with checkable acceptance criteria." },
     { "id": 2, "prompt": "here is my plan for the weekend, poke holes in it before we start", "expected_output": "Starts Stress mode: restates the plan, lists assumptions, runs a pre-mortem, ranks risks." },
     { "id": 3, "prompt": "what is the latest stable version of Next.js", "expected_output": "Does NOT trigger. A factual lookup belongs to research.", "should_trigger": false },
-    { "id": 4, "prompt": "try two layouts for the dashboard so I can pick one", "expected_output": "Does NOT trigger. Comparing designs in code belongs to spike.", "should_trigger": false }
+    { "id": 4, "prompt": "try two layouts for the dashboard so I can pick one", "expected_output": "Does NOT trigger. Comparing designs in code is not a spec.", "should_trigger": false }
   ]
 }

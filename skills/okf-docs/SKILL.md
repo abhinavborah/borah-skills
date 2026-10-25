@@ -1,6 +1,6 @@
 ---
 name: okf-docs
-description: Write, update and validate the docs/ folder as an OKF v0.2 bundle (concept files with frontmatter, index.md, log.md). Use when adding or editing any file under docs/, syncing indexes and logs, or checking bundle conformance. Not for prose style (use ste) or session handoffs (use session-handoff).
+description: Write, update and validate the docs/ folder as an OKF v0.2 bundle (concept files with frontmatter, index.md, log.md). Use when adding or editing any file under docs/, syncing indexes and logs, or checking bundle conformance. Not for session handoffs (use session-handoff).
 ---
 
 # OKF docs

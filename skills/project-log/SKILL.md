@@ -24,7 +24,7 @@ It prints active decisions, open questions, recent entries, and entries with unf
 Write at the moment of commitment, not at session end. Triggers:
 
 - A decision was made, by the user or by you.
-- Research or a spike finished, and its answer changes what happens next.
+- Research or an experiment finished, and its answer changes what happens next.
 - Direction changed, or an approach was tried and rejected.
 - A commit carries a reason someone will need later.
 - An open question surfaced that blocks a choice.
@@ -68,4 +68,4 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/journal.py" supersede --root . --old <old-f
 - Label evidence honestly and state the scope: what the conclusion does not cover. Never promote an inference to a fact.
 - One decision per entry. Keep entries under about 25 lines.
 - No secrets or personal data.
-- A plugin hook may remind you after a commit that has no entry. If nothing there is worth recording, ignore it.
+- Ask the user before the first write into a tracked tree (see the docs home rules in `okf-docs`).

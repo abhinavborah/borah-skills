@@ -36,13 +36,12 @@ hack-kit docs home: ../<name>.docs/
 |---|---|
 | Idea is vague, or a plan needs stress-testing | `hack-kit:spec-interview` |
 | Need current facts, versions, prior art | `hack-kit:research` |
-| Unsure about a design or data model | `hack-kit:spike` |
-| Building a feature or fixing a bug | `hack-kit:test-first` |
-| UI looks plain, cluttered or static | `hack-kit:better-ui` |
-| Writing docs, READMEs or error text | `hack-kit:ste` |
 | Adding or editing anything under `docs/` | `hack-kit:okf-docs` |
 | Recording a decision, finding, change or rejected approach | `hack-kit:project-log` |
 | Stopping, or handing work to another agent | `hack-kit:session-handoff` |
 | Work splits into independent parts | `hack-kit:orchestrate` |
-| Preparing the demo, pitch or submission | `hack-kit:demo-pitch` |
+| Preparing the demo or pitch | `hack-kit:demo-pitch` |
+| Organizer rules to extract and recheck | `hack-kit:contract-check` |
+| Labeled data and a score to report | `hack-kit:eval-harness` |
+| Packaging, zipping or submitting | `hack-kit:submit-pack` |
 ````
