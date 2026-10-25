@@ -31,9 +31,9 @@ Rules that follow:
 
 ## Composition
 
-- One skill owns each contract. `okf-docs` owns the docs format and its validator. `session-handoff`, `research` and `scaffold` call the validator through `${CLAUDE_SKILL_DIR}/../okf-docs/scripts/` and do not restate the rules. `ste` owns writing style and is called, not restated.
+- One skill owns each contract. `okf-docs` owns the docs format and its validator. `scaffold` calls the validator through `${CLAUDE_SKILL_DIR}/../okf-docs/scripts/`. The other skills tell the agent to follow `okf-docs`, and do not restate the rules.
 - Skills compose by instruction ("run the `okf-docs` skill"), not by copied text. Duplicated rules drift.
-- Merge two skills when they share a core loop and produce the same kind of artifact. Split them when the procedure differs, even if the triggers sound alike. `spec-interview` covers drafting and stress-testing, `test-first` covers new features and bug fixes, and `better-ui` carries motion as a reference file.
+- Merge two skills when they share a core loop and produce the same kind of artifact. Split them when the procedure differs, even if the triggers sound alike. `spec-interview` covers drafting and stress-testing, and `demo-pitch` carries the UI polish pass and its motion notes as reference files.
 - A skill whose job duplicates a skill the user may already have installed gets a distinct name, because the model chooses between similar skills by name and description alone.
 - `orchestrate` plans and asks before it spawns. Subagents are leaves: they never spawn. Concurrent subagents are capped at 5.
 
@@ -72,7 +72,7 @@ Model, from decision-record practice ([Fowler, 2026-03](https://www.martinfowler
 Trigger, from Anthropic's guidance ([memory docs](https://code.claude.com/docs/en/memory.md), [steering article, 2026-06](https://claude.com/resources/articles/steering-claude-code-skills-hooks-rules-subagents-and-more)): instructions and skills are context, and a model can skip them in a long session or under pressure. Anything that must happen at a fixed point belongs in a hook. But a hook cannot write the reason, which needs judgment. So the design layers two parts:
 
 1. The `project-log` skill and a line in the project rules file make the model write entries when a decision, finding or rejection happens.
-2. A plugin `PostToolUse` hook on `git commit` is the backstop. It adds a one-line reminder when a commit carries no entry and none was written in the last 20 minutes. It is silent in projects without `docs/journal/`, adds nothing to the repository, and stays silent for subagent events (plugin hooks do run inside subagents, but subagents never write the journal, so the orchestrator reads their Reports and journals for them).
+2. (Removed on 2026-10-25, see the addendum.) A plugin `PostToolUse` hook on `git commit` was the backstop. It adds a one-line reminder when a commit carries no entry and none was written in the last 20 minutes. It is silent in projects without `docs/journal/`, adds nothing to the repository, and stays silent for subagent events (plugin hooks do run inside subagents, but subagents never write the journal, so the orchestrator reads their Reports and journals for them).
 
 The hook only nudges. It never writes content itself, because an auto-written reason would be unsourced text stored as memory. A field report on file-based agent memory ([claude-code#68546](https://github.com/anthropics/claude-code/issues/68546)) found the same failure.
 
@@ -100,3 +100,14 @@ Findings from an adversarial review on 2026-10-24, checked against the Claude Co
 ## Versioning
 
 `plugin.json` carries no `version`. When a manifest pins one, users stay on the cached copy until the string changes ([plugin loading docs](https://code.claude.com/docs/en/plugins/loading.md)). Without it, every commit is a new version for installers. The cost is that `claude plugin validate --strict` warns about the missing field, so strict validation is not used on the manifest.
+
+## Addendum 2026-10-25: changes from the Orchestrate hackathon review
+
+An independent review of the HackerRank Orchestrate October 2026 project (51 commits, 39 transcripts, about $98 of lead-context spend) found these failures. Each change below maps to one.
+
+- Docs home. `okf-docs` now defines a docs home that defaults to `../<repo>.docs/`, outside git. Skills ask before the first write into a tracked tree. Cause: handoffs and journal files were committed to the repo and later removed at the user's request.
+- `orchestrate` rebuilt. Adds a shared-tree mode (`packet-worker-shared`, `check_ownership.py --shared`), a rule to commit the skeleton before dispatch, one on-disk ownership ledger with no scope changes by message, reports written to files with a 5 line final message, notification-based waits, dispatch only in a turn after approval, a read of `~/.claude/swarm.md`, and worktree cleanup. Cause: the skill was proposed and dropped, and 39 agents were briefed by hand.
+- `reviewer` agent. Read-only, adversarial, writes findings to a file. Cause: the most valuable agent in the project was a hand-briefed reviewer.
+- New skills: `contract-check` (organizer rules, found late by hand), `eval-harness` (a 100 percent claim was overturned for lack of a holdout), `submit-pack` (archive rebuilt three times, traces split across folders, deadline never shown).
+- Removed: `ste`, `test-first`, `spike` (never triggered, overlap skills the user already has), `better-ui` (merged into `demo-pitch`), and the journal nudge hook (it reported on HEAD, not on what the command did).
+- Not done: merging `okf-docs` with the user's own `okf` skill, which lives outside this repo, and shrinking `scaffold` to its ghost mode core.
