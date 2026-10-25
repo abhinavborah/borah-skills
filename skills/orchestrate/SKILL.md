@@ -35,7 +35,7 @@ The ownership table is also a fenced `json ownership` block. It is the ledger th
 | Mode | Use when | Workers | Gate |
 |---|---|---|---|
 | `worktree` | The repo has a commit to branch from and packets are large | `packet-worker`, own worktree and branch, commits itself | `check_ownership.py --packet` on branches |
-| `shared` | Early project, no stable base, or many small packets | `packet-worker-shared`, one tree, never runs git write commands | `check_ownership.py --shared` after each packet, then you commit |
+| `shared` | Early project, no stable base, or many small packets | `packet-worker-shared`, one tree, never runs git write commands | `check_ownership.py --shared` once after the wave, then you commit per packet |
 
 ## 3. Approve
 
@@ -43,7 +43,7 @@ Show the plan and ask the user to approve it with AskUserQuestion. State the pac
 
 Dispatch only in a turn after the approval answer arrives. Never ask and dispatch in the same turn.
 
-Then commit the skeleton: the plan, the briefs, the contract files and the empty module layout. A worktree branches from your last commit only when `worktree.baseRef` is `head`. The preflight checks this and that the tree is clean:
+Then commit the skeleton: the contract files and the empty module layout that every packet builds on. The plan and the briefs live in the docs home, outside git by default, and are passed by absolute path, so they are not committed. If the user chose a docs home inside the repo, commit them too and add each brief to its packet's `may_write`. A worktree branches from your last commit only when `worktree.baseRef` is `head`. The preflight checks this and that the tree is clean:
 
 ```shell
 python3 "${CLAUDE_SKILL_DIR}/scripts/preflight.py" --root .
@@ -53,10 +53,10 @@ If it reports `baseRef`, ask the user, then run it again with `--fix`. That writ
 
 ## 4. Dispatch
 
-1. For each packet, write a brief with the `session-handoff` skill (subagent kind). Add the brief's own path to that packet's `may_write`. Commit the plan and briefs, then run the preflight again.
+1. For each packet, write a brief with the `session-handoff` skill (subagent kind). Then run the preflight again.
 2. Start independent packets together with the Agent tool, one call each in a single message. Use `hack-kit:packet-worker` (worktree mode) or `hack-kit:packet-worker-shared` (shared mode). Read-only packets run in place with `hack-kit:reviewer` or a plain agent.
 3. Name each subagent after its packet. Right after dispatch, record the returned agent ID and the time in the brief's Agent section. To continue or correct a subagent, message it by name or ID instead of starting a new one.
-4. The dispatch prompt gives the brief path and the packet name only. The agent definition carries the rules.
+4. The dispatch prompt gives the brief's absolute path and the packet name only. The agent definition carries the rules.
 5. Wait for task notifications. Do not poll. Use Monitor only with an until-condition on a file the worker was told to write.
 
 ## 5. Collect and gate
@@ -73,10 +73,10 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/check_ownership.py" --plan <plan-file> --ba
 
 It fails when a packet wrote outside its files (a rename counts), when two packets touched the same file, when a packet has no commits, or when its worktree is dirty.
 
-Shared mode: after each packet reports, check the tree, then commit that packet's files with an explicit file list.
+Shared mode: after the whole wave reports, check the tree once with every packet name. Workers share one tree, so the check cannot say who wrote a file: it only catches files no packet owns or two packets own. Commit each packet with the explicit file list from its Report, and treat a listed file outside that packet's globs as a violation.
 
 ```shell
-python3 "${CLAUDE_SKILL_DIR}/scripts/check_ownership.py" --plan <plan-file> --shared <name>
+python3 "${CLAUDE_SKILL_DIR}/scripts/check_ownership.py" --plan <plan-file> --shared <name> <name>
 ```
 
 Run the test suite once after the whole wave, not while workers are still editing. Concurrent edits cause failures that no packet owns. A report is a claim, so run each packet's declared checks yourself. For a second opinion on a wave, dispatch `hack-kit:reviewer` on the diff.

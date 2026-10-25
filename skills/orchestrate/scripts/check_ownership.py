@@ -3,7 +3,7 @@
 
 Usage: check_ownership.py --plan PLAN.md --base REF --packet NAME=REF [--packet ...]
                           [--worktree NAME=DIR ...] [--repo DIR]
-       check_ownership.py --plan PLAN.md --shared NAME [--repo DIR]
+       check_ownership.py --plan PLAN.md --shared NAME [NAME ...] [--repo DIR]
        check_ownership.py --self-test
 
 PLAN.md holds one fenced block that starts with ```json ownership:
@@ -12,8 +12,11 @@ Each --packet maps a packet name to the branch or commit that holds its work. Pa
 that write files. --worktree names the directory a packet worked in, so uncommitted work is caught.
 Renames count as a delete plus an add, so moving a file out of another packet's area is flagged.
 A packet with no commits past the base is reported, since uncommitted work cannot be merged.
---shared NAME is for a single shared tree: it checks the uncommitted and untracked files in --repo
-against packet NAME's may_write. Run it after each packet, before the lead commits that packet.
+--shared NAME ... is for a single shared tree. Run it once, after the whole wave: it checks every
+uncommitted and untracked file in --repo against the may_write globs of all the named packets, and
+flags a file that matches none or matches two. It cannot tell which worker wrote a file, because
+workers share the tree. The lead gets that from each worker's Report file list and commits each
+packet with that explicit list. Running it while a worker is still editing gives false hits.
 Globs: ** matches across directories, * within one. Exit 1 on any finding.
 """
 import argparse
@@ -74,10 +77,11 @@ def gate(plan, repo, base, refs, worktrees=None):
     return out
 
 
-def gate_shared(plan, repo, name):
+def gate_shared(plan, repo, names):
     packets = load_plan(plan)
-    if name not in packets:
-        return [f"{name}: not in plan"]
+    missing = [f"{n}: not in plan" for n in names if n not in packets]
+    if missing:
+        return missing
     r = subprocess.run(["git", "-C", repo, "status", "--porcelain", "--untracked-files=all", "-z"], capture_output=True, text=True)
     if r.returncode:
         sys.exit(f"git status failed: {r.stderr.strip()}")
@@ -89,9 +93,15 @@ def gate_shared(plan, repo, name):
             i += 1
             files.add(parts[i])
         i += 1
-    allowed = [g2re(g) for g in packets[name]["may_write"]]
-    out = [f"{name}: wrote {f} outside its ownership" for f in sorted(files) if not any(a.match(f) for a in allowed)]
-    return out or ([] if files else [f"{name}: no changes in the working tree"])
+    globs = {n: [g2re(g) for g in packets[n]["may_write"]] for n in names}
+    out = []
+    for f in sorted(files):
+        owners = [n for n in names if any(g.match(f) for g in globs[n])]
+        if not owners:
+            out.append(f"{f}: owned by none of {', '.join(names)}")
+        elif len(owners) > 1:
+            out.append(f"{f}: owned by {' and '.join(owners)}")
+    return out or ([] if files else ["no changes in the working tree"])
 
 
 def self_test():
@@ -150,13 +160,20 @@ def self_test():
         run("git", "add", ".", cwd=r)
         run("git", *env, "commit", "-q", "-m", "base", cwd=r)
         plan = Path(t) / "plan.md"
-        plan.write_text('```json ownership\n{"packets": {"a": {"may_write": ["src/auth/**"]}}}\n```\n')
-        assert gate_shared(plan, str(r), "a") == ["a: no changes in the working tree"]
+        plan.write_text('```json ownership\n{"packets": {"a": {"may_write": ["src/auth/**"]}, "b": {"may_write": ["src/billing/**"]}}}\n```\n')
+        assert gate_shared(plan, str(r), ["a"]) == ["no changes in the working tree"]
         (r / "src/auth").mkdir(parents=True)
         (r / "src/auth/x.py").write_text("1\n")
-        assert gate_shared(plan, str(r), "a") == []
+        assert gate_shared(plan, str(r), ["a"]) == []
+        # two workers dirty at once: a wave check passes, a single-packet check flags the other's file
+        (r / "src/billing").mkdir(parents=True)
+        (r / "src/billing/y.py").write_text("1\n")
+        assert gate_shared(plan, str(r), ["a", "b"]) == []
+        assert gate_shared(plan, str(r), ["a"]) == ["src/billing/y.py: owned by none of a"]
         (r / "src/other.py").write_text("1\n")
-        assert gate_shared(plan, str(r), "a") == ["a: wrote src/other.py outside its ownership"]
+        assert gate_shared(plan, str(r), ["a", "b"]) == ["src/other.py: owned by none of a, b"]
+        plan.write_text('```json ownership\n{"packets": {"a": {"may_write": ["src/**"]}, "b": {"may_write": ["src/billing/**"]}}}\n```\n')
+        assert gate_shared(plan, str(r), ["a", "b"]) == ["src/billing/y.py: owned by a and b"]
     print("self-test ok")
 
 
@@ -166,7 +183,7 @@ if __name__ == "__main__":
     p.add_argument("--base")
     p.add_argument("--packet", action="append", default=[])
     p.add_argument("--worktree", action="append", default=[])
-    p.add_argument("--shared")
+    p.add_argument("--shared", nargs="+")
     p.add_argument("--repo", default=".")
     p.add_argument("--self-test", action="store_true")
     a = p.parse_args()

@@ -31,13 +31,16 @@ def entries(path):
 
 
 def scan(path):
-    out = []
+    out, junk = [], {}
     for name, read in entries(path):
-        if JUNK & set(Path(name).parts):
-            out.append(f"{path}: junk entry {name}")
+        parts = Path(name).parts
+        hit = next((i for i, x in enumerate(parts) if x in JUNK), None)
+        if hit is not None:  # one line per junk root, with a count
+            root = "/".join(parts[: hit + 1])
+            junk[root] = junk.get(root, 0) + 1
         if read and SECRET.search(read()):
             out.append(f"{path}: secret-shaped string in {name}")
-    return out
+    return [f"{path}: junk entry {r} ({n} files)" for r, n in sorted(junk.items())] + out
 
 
 def self_test():
@@ -55,7 +58,7 @@ def self_test():
             zf.writestr("__MACOSX/x", "y")
             zf.writestr("ok.txt", "fine")
         out = scan(z)
-        assert len(out) == 1 and "junk entry __MACOSX/x" in out[0], out
+        assert len(out) == 1 and "junk entry __MACOSX (1 files)" in out[0], out
     print("self-test ok")
 
 

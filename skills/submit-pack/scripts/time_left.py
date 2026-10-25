@@ -65,6 +65,8 @@ if __name__ == "__main__":
     for k in ("--deadline", "--now"):
         if k in args:
             i = args.index(k)
+            if i + 1 >= len(args):
+                sys.exit(f"{k} needs a value")
             opts[k] = args[i + 1]
             del args[i : i + 2]
     dl = opts.get("--deadline") or find(args)

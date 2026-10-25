@@ -23,7 +23,7 @@ If the kind is unclear, ask.
 3. **Fill the template.** Session: [references/session.md](references/session.md). Subagent: [references/subagent.md](references/subagent.md).
 4. **Settle the next task.** If it is not clear, write "not yet assigned" with ranked candidates, and ask the user now if one question would settle it.
 5. **Sync.** Follow the `okf-docs` skill: add the file to the folder's `index.md`, prepend a dated entry to `log.md`, run the validator.
-6. **Ask two things.** Commit the handoff (explicit file list, never push)? Print an inline prompt for the next agent? Both are optional.
+6. **Ask two things.** Commit the handoff (explicit file list, never push)? Ask only when the docs home is inside a git repo. Print an inline prompt for the next agent? Both are optional.
 
 ## Content rules
 
