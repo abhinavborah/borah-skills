@@ -13,6 +13,8 @@ generated: { by: human:handle, at: 2026-10-24T10:00:00Z }
 
 # Invite flow: three packets
 
+Mode: worktree
+
 ## Boundary contract
 `POST /api/invites/redeem` returns `201 {userId, teamId}`, `409 {code: "invite_used"}`, or `422 {fieldErrors}`.
 
