@@ -1,0 +1,9 @@
+{
+  "skill_name": "contract-check",
+  "evals": [
+    { "id": 1, "prompt": "Here is the hackathon problem statement and the repo rules file. List every requirement before we build.", "expected_output": "Reads every source in full, writes a numbered MUST and SHOULD contract with sources, flags conflicts and typos, asks the user to decide." },
+    { "id": 2, "prompt": "Before I submit, check we still meet every rule from the organizers.", "expected_output": "Runs contract_lint.py with --final, reruns each proof, reports open items." },
+    { "id": 3, "prompt": "Interview me about what features the app should have.", "expected_output": "Does NOT trigger. Feature requirements belong to spec-interview.", "should_trigger": false },
+    { "id": 4, "prompt": "Write the README for the project.", "expected_output": "Does NOT trigger. Writing docs is not rule extraction.", "should_trigger": false }
+  ]
+}
