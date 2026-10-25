@@ -1,0 +1,9 @@
+{
+  "skill_name": "eval-harness",
+  "evals": [
+    { "id": 1, "prompt": "We have 32 labeled sample cases and a scoring rule. Set up evaluation before I start tuning.", "expected_output": "Lists labeled data, makes a seeded group split, writes a scorer, adds the leak guard, warns that few examples mean leave-one-group-out." },
+    { "id": 2, "prompt": "Our accuracy is 100%, can we write that in the report?", "expected_output": "Asks what the number was measured on, requires a holdout or labels it in-sample." },
+    { "id": 3, "prompt": "Add a unit test for the date parser.", "expected_output": "Does NOT trigger. Unit tests are not evaluation.", "should_trigger": false },
+    { "id": 4, "prompt": "Fix the failing import in main.py.", "expected_output": "Does NOT trigger.", "should_trigger": false }
+  ]
+}
