@@ -5,6 +5,8 @@ description: Prepare a hackathon demo, pitch and submission. Picks the one flow 
 
 # Demo and pitch
 
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
+
 Judges remember the demo. A clear demo of a simple project beats a confusing demo of a strong one. Most winners were decided by the few minutes spent presenting.
 
 ## Steps

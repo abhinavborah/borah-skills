@@ -5,6 +5,8 @@ description: Log decisions, findings, changes and rejected approaches as shared 
 
 # Project log
 
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
+
 Git holds what changed. The journal holds why. A decision that lives only in the chat is lost at the next compaction, and an agent that cannot see why an approach was rejected will propose it again.
 
 ## Read

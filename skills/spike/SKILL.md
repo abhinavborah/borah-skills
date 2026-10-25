@@ -5,6 +5,8 @@ description: Answer one design or logic question with small, disposable, runnabl
 
 # Spike
 
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
+
 A spike produces an answer, not code to ship. Without a question it is just unplanned coding.
 
 ## Steps

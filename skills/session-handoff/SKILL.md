@@ -5,6 +5,8 @@ description: Write a timestamped handoff file in docs/handoffs/ (session) or doc
 
 # Session handoff
 
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
+
 A handoff is a file the next agent reads first. It holds pointers, decisions and tool notes, not a retelling. Two kinds:
 
 | Kind | File | Reader |

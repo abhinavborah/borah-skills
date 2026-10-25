@@ -17,7 +17,9 @@ Write to `AGENTS.md` (and a one-line `CLAUDE.md` containing `@AGENTS.md` if both
 
 ## Docs
 
-`docs/` is an OKF bundle. Use the `hack-kit:okf-docs` skill for any change there. Specs go in `docs/specs/`, decisions, findings and changes in `docs/journal/`, research notes in `docs/research/`, handoffs in `docs/handoffs/` and `docs/subagent-handoffs/`.
+hack-kit docs home: ../<name>.docs/
+
+`docs/` is an OKF bundle, found under the docs home above. Use the `hack-kit:okf-docs` skill for any change there. Specs go in `docs/specs/`, decisions, findings and changes in `docs/journal/`, research notes in `docs/research/`, handoffs in `docs/handoffs/` and `docs/subagent-handoffs/`.
 
 ## Working rules
 

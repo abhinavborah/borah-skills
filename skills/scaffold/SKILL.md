@@ -26,6 +26,8 @@ Ask in batches of at most four questions with AskUserQuestion. The question bank
 3. Agent files: `CLAUDE.md`, `AGENTS.md`, both or neither. Ask each one separately.
 4. Stack: research one, bring your own, or decide later.
 5. Ghost mode: off, all levels, or chosen levels. Explain the levels in one line each.
+6. Docs home: outside the repo in `../<name>.docs/` (default) or inside it as `docs/`. See the `okf-docs` skill.
+7. Deadline with its timezone. It goes into the rules file as `hack-kit deadline: <ISO-8601 with offset>`, so later steps can compute time left.
 
 ## 4. Stack
 
@@ -40,8 +42,8 @@ In this order. Report each step as it finishes.
 3. Docs bundle (`research`, `specs`, `journal`, `handoffs`, `subagent-handoffs`):
 
 ```shell
-python3 "${CLAUDE_SKILL_DIR}/scripts/scaffold_docs.py" --root . --project "<name>" --by "human:<handle>" [--neutral]
-python3 "${CLAUDE_SKILL_DIR}/../okf-docs/scripts/okf_validate.py" --strict docs
+python3 "${CLAUDE_SKILL_DIR}/scripts/scaffold_docs.py" --root <docs home> --project "<name>" --by "human:<handle>" [--neutral]
+python3 "${CLAUDE_SKILL_DIR}/../okf-docs/scripts/okf_validate.py" --strict <docs home>/docs
 ```
 
 Add `--neutral` when ghost level `neutral-docs` is chosen.

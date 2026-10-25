@@ -5,6 +5,8 @@ description: Turn a vague idea into a testable spec by interviewing the user, or
 
 # Spec interview
 
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
+
 The first prompt is an impulse, not a spec. Interview until every requirement can be checked by someone who did not write it. Do not build anything in this skill.
 
 Two modes. If the user does not say which, ask.

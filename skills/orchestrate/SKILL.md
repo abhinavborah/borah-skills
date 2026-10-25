@@ -5,6 +5,8 @@ description: Split work into independent packets, get approval, then dispatch in
 
 # Orchestrate
 
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
+
 Parallel agents cost coordination: contracts, briefs, a merge gate. Use them only when the parts are independent. Otherwise do the work directly.
 
 ## 1. Gate

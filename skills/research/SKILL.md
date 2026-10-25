@@ -5,6 +5,8 @@ description: Dated, sourced research using the best available tools (firecrawl, 
 
 # Research
 
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
+
 Facts go stale. Every note records when it was checked and where each claim came from.
 
 ## 1. Preflight
