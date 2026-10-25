@@ -75,8 +75,17 @@ def lint_prose(root):
     return errs
 
 
+def lint_readme(root):
+    readme = root / "README.md"
+    if not readme.exists() or not (root / "skills").is_dir():
+        return []
+    listed = set(re.findall(r"^\| `([a-z0-9-]+)` \|", readme.read_text(), re.M))
+    actual = {d.name for d in (root / "skills").iterdir() if d.is_dir()}
+    return [f"{readme}: skill table lists {sorted(listed - actual)} not in skills/" for _ in [0] if listed - actual] + [f"{readme}: skills/ has {sorted(actual - listed)} missing from the skill table" for _ in [0] if actual - listed]
+
+
 def lint(root):
-    errs = lint_prose(root)
+    errs = lint_prose(root) + lint_readme(root)
     for d in sorted((root / "skills").glob("*/")):
         if (d / "SKILL.md").exists():
             errs += lint_skill(d)
@@ -104,7 +113,9 @@ def self_test():
         (d / "other.md").write_text("x\n")
         d2 = make(bad, "beta", body="[gone](nope.md) and a " + EM_DASH + " dash\n")
         (d2 / "SKILL.md").write_text((d2 / "SKILL.md").read_text().replace("name: beta", "name: wrong"))
+        (bad / "README.md").write_text("| `ghost` | x |\n| `beta` | x |\n")
         out = "\n".join(lint(bad))
+        assert "not in skills/" in out and "missing from the skill table" in out, out
         for needle in ("invalid name", "body over", "broken link", "must equal directory", "em dash"):
             assert needle in out, (needle, out)
     print("self-test ok")

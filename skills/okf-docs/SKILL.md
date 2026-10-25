@@ -1,6 +1,6 @@
 ---
 name: okf-docs
-description: Write, update and validate the docs/ folder as an OKF v0.2 bundle (concept files with frontmatter, index.md, log.md). Use when adding or editing any file under docs/, syncing indexes and logs, or checking bundle conformance. Not for prose style (use ste) or session handoffs (use session-handoff).
+description: Write, update and validate the docs/ folder as an OKF v0.2 bundle (concept files with frontmatter, index.md, log.md). Use when adding or editing any file under docs/, syncing indexes and logs, or checking bundle conformance. Not for session handoffs (use session-handoff).
 ---
 
 # OKF docs
@@ -35,6 +35,15 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/okf_validate.py" docs
 ```
 
 Fix every ERROR. Fix WARNINGs unless there is a reason. Add `--strict` to fail on warnings.
+
+## Docs home
+
+Every `docs/...` path in this plugin is relative to the docs home, which holds the `docs/` bundle. It is not always the repo. Resolve it in this order:
+
+1. A line `hack-kit docs home: <path>` in the project rules file (`CLAUDE.md`, `AGENTS.md` or `.claude/rules/hack-kit.md`).
+2. Default: `../<repo-name>.docs/`, a sibling folder outside git. The bundle is then `../<repo-name>.docs/docs/`.
+
+The docs home may be the repo root only after the user says yes. Ask with AskUserQuestion before the first write into a tree git tracks, and write the answer into the rules file. Never write handoffs, journal entries or research notes into a tracked tree on your own. Scripts take `--root <docs home>`. Run validators from the docs home.
 
 ## New folder
 

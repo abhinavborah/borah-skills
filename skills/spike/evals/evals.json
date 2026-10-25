@@ -1,9 +1,0 @@
-{
-  "skill_name": "spike",
-  "evals": [
-    { "id": 1, "prompt": "I am not sure the websocket library can handle 500 clients, can we try it quickly before committing", "expected_output": "Writes a one-sentence question, a timebox and keep/kill criteria, builds in spikes/<slug>/, records the answer, deletes the code." },
-    { "id": 2, "prompt": "show me three different layouts for the results page so I can choose", "expected_output": "UI shape: variants behind a switcher, judged on one scenario, answer recorded." },
-    { "id": 3, "prompt": "implement the login endpoint", "expected_output": "Does NOT trigger. Real feature work belongs to test-first.", "should_trigger": false },
-    { "id": 4, "prompt": "what do people recommend for auth libraries this year", "expected_output": "Does NOT trigger. A sourced lookup belongs to research.", "should_trigger": false }
-  ]
-}

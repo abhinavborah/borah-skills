@@ -1,9 +1,11 @@
 ---
 name: demo-pitch
-description: Prepare a hackathon demo, pitch and submission. Picks the one flow to show, cuts scope to it, writes a timed demo script with a fallback, drafts submission text, and sets a rehearsal checklist. Use in the last third of a hackathon, or when asked for a pitch, demo script or submission. Not for general documentation (use ste).
+description: Prepare a hackathon demo, pitch and submission. Picks the one flow to show, cuts scope to it, writes a timed demo script with a fallback, drafts submission text, and sets a rehearsal checklist. Use in the last third of a hackathon, or when asked for a pitch, demo script or submission. Includes a UI polish pass for the demo path. Not for general documentation.
 ---
 
 # Demo and pitch
+
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
 
 Judges remember the demo. A clear demo of a simple project beats a confusing demo of a strong one. Most winners were decided by the few minutes spent presenting.
 
@@ -20,9 +22,19 @@ Judges remember the demo. A clear demo of a simple project beats a confusing dem
    - Record a short fallback video of the full flow.
    - Test on the venue's network and screen, or offline.
 6. **Be direct about limits.** One line each: what works, what does not yet, how it could extend. Do not talk around a missing feature.
-7. **Draft the submission text** to the field limits: title, one-line tagline, problem, what it does, how it was built, challenges, what is next, links. Write it with the `ste` skill's habits: short, concrete, no hype.
+7. **Draft the submission text** to the field limits: title, one-line tagline, problem, what it does, how it was built, challenges, what is next, links. Keep it short, concrete and free of hype.
 8. **Rehearse.** Run it out loud and time it. Run it once with someone who has not seen it. Run it once with the main path failing on purpose to practice the fallback.
 9. **Save the plan** to `docs/pitch.md` as type `Pitch Plan`, using the `okf-docs` skill. Keep the script and checklist there so teammates share one version.
+
+## Polish the demo path
+
+Only for screens the judge will see. Fix structure before details, and details before motion.
+
+1. Run the app and look at the real screens in a browser at desktop and phone width. Do not judge from code alone.
+2. Name one palette, one type pairing, one spacing scale and one radius scale. Write them as CSS variables or theme tokens.
+3. Audit in this order and fix the top findings first: hierarchy (one primary action per screen), spacing, states (empty, loading, error, success), type and color (contrast of at least 4.5:1), then details ([references/ui-details.md](references/ui-details.md)), then motion ([references/ui-motion.md](references/ui-motion.md)), last and sparing.
+4. Replace generic looks: default purple-to-blue gradients, emoji as icons, every element in the same card, placeholder copy.
+5. Verify in the browser: both widths, focus order and rings, reduced-motion setting, and the demo flow end to end, with seeded data that looks real.
 
 ## Final checklist
 

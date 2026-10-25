@@ -7,6 +7,7 @@ Use AskUserQuestion, at most four questions per call, two to four options each. 
 - Project name (becomes the folder, repo and docs title). Offer a derived name plus Other.
 - One-line idea. Other only; offer "decide later".
 - Deadline and team size. Options: solo, 2 to 3, 4 or more; deadline through Other.
+- Docs home. Options: outside the repo in `../<name>.docs/` (recommended), inside the repo as `docs/`.
 - Handle for authorship fields, for example `human:handle`. Offer the git user name plus Other.
 
 ## Batch 2: repository

@@ -1,9 +1,13 @@
 ---
 name: spec-interview
-description: Turn a vague idea into a testable spec by interviewing the user, or stress-test an existing plan before building. Use at the start of a project or feature, when requirements are unclear, or when the user asks to be grilled on a plan. Writes docs/specs/<name>.md. Not for looking up facts (use research) or trying a design in code (use spike).
+description: Turn a vague idea into a testable spec by interviewing the user, or stress-test an existing plan before building. Use at the start of a project or feature, when requirements are unclear,. Writes docs/specs/<name>.md. Not for looking up facts (use research) or trying a design in code.
 ---
 
 # Spec interview
+
+When the source is an organizer's rules document, run the `contract-check` skill first and use its contract as the fixed requirements.
+
+Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill.
 
 The first prompt is an impulse, not a spec. Interview until every requirement can be checked by someone who did not write it. Do not build anything in this skill.
 
@@ -44,7 +48,7 @@ Then write the spec with [references/spec.md](references/spec.md), following the
 2. List the assumptions it depends on, then mark which have evidence.
 3. Run a pre-mortem: "It is demo time and this failed. Why?" Collect causes.
 4. Walk the decision tree one branch at a time, resolving dependencies in order. For each branch ask: what is the risk, what is the evidence, what is the cheapest test?
-5. Route open questions: facts to `research`, design doubts to `spike`.
+5. Route open questions: facts to `research`, design doubts to a throwaway experiment.
 6. End with the risks ranked by impact and the changes to the plan. Ask which to adopt.
 
 ## Rules

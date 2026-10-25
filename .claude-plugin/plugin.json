@@ -1,6 +1,6 @@
 {
   "name": "hack-kit",
-  "description": "Hackathon project workflow: opt-in scaffolding, OKF docs, research, handoffs, subagent orchestration, and build-phase skills.",
+  "description": "Hackathon project workflow: opt-in scaffolding, OKF docs, research, handoffs, subagent orchestration, rules contract, evaluation harness, and submission packaging.",
   "author": {
     "name": "Abhinav Borah"
   },

@@ -1,9 +1,0 @@
-{
-  "skill_name": "ste",
-  "evals": [
-    { "id": 1, "prompt": "rewrite these setup instructions so a non-native English speaker can follow them", "expected_output": "Rewrites in short active sentences with numbered single-action steps and consistent terms, without losing facts." },
-    { "id": 2, "prompt": "improve the error messages in this file", "expected_output": "Rewrites messages as plain statements of what happened and what to do next." },
-    { "id": 3, "prompt": "write the closing line of our hackathon pitch", "expected_output": "Does NOT trigger. Pitch copy belongs to demo-pitch.", "should_trigger": false },
-    { "id": 4, "prompt": "is this document ASD-STE100 compliant", "expected_output": "Loads ste but does NOT claim compliance. Says the skill applies a practical subset and points to the standard." }
-  ]
-}

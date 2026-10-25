@@ -1,0 +1,9 @@
+{
+  "skill_name": "submit-pack",
+  "evals": [
+    { "id": 1, "prompt": "We are done building. Package the code zip and everything I need to submit.", "expected_output": "Shows time left, clean-clone check, tracked-files archive, collects traces from every project folder, scans the bundle, lists artifacts with md5 and the exact submission URL." },
+    { "id": 2, "prompt": "How long do we have left before the contest closes, and are we ready to submit?", "expected_output": "Runs time_left.py, then the contract recheck; asks for the deadline if none is stored." },
+    { "id": 3, "prompt": "Write a two minute demo script for the judges.", "expected_output": "Does NOT trigger. The pitch belongs to demo-pitch.", "should_trigger": false },
+    { "id": 4, "prompt": "Bump the version in package.json and publish a release.", "expected_output": "Does NOT trigger. Not a contest submission.", "should_trigger": false }
+  ]
+}
