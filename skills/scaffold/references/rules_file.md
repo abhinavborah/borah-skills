@@ -24,12 +24,13 @@ hack-kit deadline: <ISO-8601 with offset, or remove this line>
 
 ## Working rules
 
-- Ask before destructive or outward-facing actions: deleting, force pushing, publishing, spending credits.
-- Commit in small logical groups with explicit file lists. Do not push unless asked.
-- Record each decision, finding, change of direction and rejected approach with `hack-kit:project-log` as it happens. Read the digest at session start.
+- If docs and code disagree, follow the code and report the mismatch.
+- Do not delete, force push, publish or spend credits without asking.
+- Do not make one large commit: commit small logical groups with explicit file lists. Do not push unless asked.
+- Do not leave a decision, finding, change of direction or rejected approach unrecorded: log it with `hack-kit:project-log` as it happens. Read the digest at session start.
 - When asked to record, log, note or remember a decision or its reason for this project, write a journal entry with `hack-kit:project-log`. Private memory alone is not shared project history.
-- Write a handoff before the context fills up.
-- Fix bugs by reproducing them first, as the user would see them.
+- Do not let the context fill up without writing a handoff.
+- Do not fix a bug before reproducing it as the user would see it.
 
 ## Which skill when
 
