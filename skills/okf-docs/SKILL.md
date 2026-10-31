@@ -26,7 +26,7 @@ This skill owns the docs format. Other skills call it and do not restate these r
 
 1. Pick the directory and a `snake_case` name. Read the file first if it exists.
 2. Write frontmatter and body from the template in [references/format.md](references/format.md).
-3. Rebuild the indexes. Entries come from each concept's `title` and `description`, so do not edit the link list by hand:
+3. Rebuild the indexes. Entries come from each concept's `title` and `description`, so do not edit the link list by hand. Run it on the bundle root; for one subfolder, pass `--root docs <subfolder>`:
 
 ```shell
 python3 "${CLAUDE_SKILL_DIR}/scripts/build_index.py" docs

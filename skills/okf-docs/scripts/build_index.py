@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Rebuild the link list in every index.md of an OKF bundle from concept frontmatter.
 
-Usage: build_index.py [--check] <bundle_dir>
+Usage: build_index.py [--check] [--root <bundle_dir>] <dir>
        build_index.py --self-test
 
 Each entry is `* [title](file.md) - description`, taken from the linked file, so the
@@ -10,6 +10,9 @@ Only the block between the okf-index markers is managed; other text in index.md 
 A missing index.md is created with Bundle Index frontmatter (the root one with
 okf_version and the docs-versus-code precedence line).
 --check writes nothing and exits 1 when any index is out of date.
+--root names the bundle root when <dir> is a subfolder: only <dir>, its subfolders and its
+parent indexes are rebuilt, and root-only lines go to the real root. Without --root, a
+<dir> whose parent holds an index.md is refused, so a subfolder is never treated as the root.
 """
 import re
 import sys
@@ -63,10 +66,21 @@ def rebuild(text, block, managed):
     return "\n".join(kept).rstrip("\n") + "\n\n" + block + "\n"
 
 
-def build(root, check=False):
+def guard(target, root, explicit_root):
+    """Return an error message when target cannot be built as asked, else None."""
+    if target != root and root not in target.parents:
+        return f"{target} is not inside --root {root}"
+    if not explicit_root and (target.parent / "index.md").exists():
+        return f"{target} looks like a subfolder ({target.parent / 'index.md'} exists); run on the bundle root or pass --root <bundle root>"
+    return None
+
+
+def build(root, check=False, target=None):
+    target = target or root
     stale = []
     # deepest first, so a parent lists the index its child just got
-    for d in sorted(concept_dirs(root), key=lambda p: -len(p.parts)):
+    dirs = [d for d in concept_dirs(root) if d == target or target in d.parents or d in target.parents]
+    for d in sorted(dirs, key=lambda p: -len(p.parts)):
         idx = d / "index.md"
         text = idx.read_text() if idx.exists() else new_index(d, root)
         managed = {link for link, _, _ in entries(d)}
@@ -101,6 +115,21 @@ def self_test():
         build(r)
         out = (r / "index.md").read_text()
         assert "Intro." in out and "[PDF](report.pdf)" in out and "[Old]" not in out and out.count("alpha.md") == 1, out
+
+    # a subfolder run is refused without --root; with it, root-only lines stay at the real root
+    with tempfile.TemporaryDirectory() as t:
+        r = Path(t)
+        (r / "alpha.md").write_text(note)
+        build(r)
+        sub = r / "handoffs"
+        sub.mkdir()
+        (sub / "h.md").write_text(note.replace("Alpha", "Gamma"))
+        assert "looks like a subfolder" in (guard(sub, sub, False) or "")
+        assert guard(sub, r, True) is None and "not inside" in (guard(r, sub, True) or "")
+        build(r, target=sub)
+        sub_idx = (sub / "index.md").read_text()
+        assert "okf_version" not in sub_idx and PRECEDENCE not in sub_idx and "[Gamma](h.md)" in sub_idx, sub_idx
+        assert "](handoffs/index.md)" in (r / "index.md").read_text()
     print("self-test ok")
 
 
@@ -108,11 +137,23 @@ if __name__ == "__main__":
     if "--self-test" in sys.argv:
         self_test()
         sys.exit(0)
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    argv = sys.argv[1:]
+    root = None
+    if "--root" in argv:
+        i = argv.index("--root")
+        if i + 1 >= len(argv):
+            sys.exit(__doc__)
+        root = Path(argv.pop(i + 1)).resolve()
+        argv.pop(i)
+    args = [a for a in argv if not a.startswith("--")]
     if len(args) != 1:
         sys.exit(__doc__)
-    check = "--check" in sys.argv
-    stale = build(Path(args[0]).resolve(), check)
+    target = Path(args[0]).resolve()
+    err = guard(target, root or target, root is not None)
+    if err:
+        sys.exit("build_index.py: " + err)
+    check = "--check" in argv
+    stale = build(root or target, check, target)
     for p in stale:
         print(("out of date: " if check else "updated: ") + str(p))
     sys.exit(1 if check and stale else 0)
