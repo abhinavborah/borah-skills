@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Validate an OKF v0.2 bundle, plus the typed index/log convention used here.
 
-Usage: okf_validate.py [--strict] <bundle_dir>
+Usage: okf_validate.py [--strict] [--repo <repo_dir>] <bundle_dir>
        okf_validate.py --self-test
 
 ERROR   a MUST in the spec is broken: unparseable or missing frontmatter, missing type,
         missing generated.by, a log heading that is not YYYY-MM-DD
-WARNING convention gap: missing fields, bad time format, broken link, missing index or log,
-        unlinked concept, naming
+WARNING convention gap: missing fields, bad time format, broken or root-relative link,
+        missing index or log, unlinked concept, naming, description longer than one
+        sentence, past stale_after, concept too long, folder nested too deep,
+        `path:line` refs without a `commit` pin
+        with --repo: cited repo paths that do not exist, cited files changed since `commit`
 NOTE    informational, never fails: legacy fields in use
 --strict exits non-zero on warnings as well.
 
@@ -15,8 +18,10 @@ Frontmatter is parsed with a strict YAML subset: mappings, block lists, flow lis
 quoted and plain scalars. Anchors, tags and block scalars are reported as unsupported and the
 file falls back to a loose read.
 """
+import datetime as dt
 import json
 import re
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -30,6 +35,10 @@ FENCE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 FM = re.compile(r"---\n(.*?)\n---\n?", re.S)
 STATUS = {"draft", "stable", "deprecated"}
 KEY = re.compile(r'([A-Za-z_][\w-]*|"[^"]+")\s*:(?:\s+(.*))?$')
+LINE_REF = re.compile(r"`([\w.-]+(?:/[\w.-]+)+\.\w+):\d+")  # `path/to/file.py:42`
+SENTENCE_BREAK = re.compile(r"[.!?]\s+(?=[A-Z0-9`])")
+MAX_LINES = 250  # longer concepts cost tokens on every read; split them
+MAX_DEPTH = 2  # one flat level of disclosure routes better than deep trees
 
 
 class YamlError(Exception):
@@ -230,10 +239,49 @@ def concept_dirs(root):
             yield d
 
 
-def validate(root, notes=None):
+def parse_time(val):
+    try:
+        return dt.datetime.fromisoformat(str(val).strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def cited_paths(fm, body):
+    """Repo-relative paths a concept cites: `sources` resources that are not URLs, and `path:line` refs."""
+    paths = set(LINE_REF.findall(body))
+    for s in fm.get("sources") if isinstance(fm.get("sources"), list) else []:
+        res = str(s.get("resource") or "").strip() if isinstance(s, dict) else ""
+        if res and "://" not in res and not res.startswith(("/", "mailto:", "#")) and "/" in res:
+            paths.add(res.split("#")[0])
+    return paths
+
+
+def in_repo(repo, path):
+    """Resolve a cited path inside repo; tolerate a leading repo folder name."""
+    for cand in (path, path.split("/", 1)[1] if path.split("/", 1)[0] == repo.name and "/" in path else None):
+        if cand and (repo / cand).exists():
+            return cand
+    return None
+
+
+def changed_since(repo, commit, cache={}):
+    key = (str(repo), commit)
+    if key not in cache:
+        git = ["git", "-C", str(repo)]
+        known = subprocess.run([*git, "cat-file", "-e", f"{commit}^{{commit}}"], capture_output=True).returncode == 0
+        out = subprocess.run([*git, "diff", "--name-only", commit, "HEAD"], capture_output=True, text=True).stdout if known else ""
+        cache[key] = (known, set(out.split()))
+    return cache[key]
+
+
+def validate(root, notes=None, repo=None):
     errs, warns = [], []
     legacy = 0
+    now = dt.datetime.now(dt.timezone.utc)
     for d in concept_dirs(root):
+        depth = len(d.relative_to(root).parts)
+        if depth > MAX_DEPTH:
+            warns.append(f"{d}: nested {depth} levels deep; keep the bundle flat (max {MAX_DEPTH})")
         files = sorted(f for f in d.iterdir() if f.suffix == ".md")
         for need in RESERVED:
             if not (d / need).exists():
@@ -270,6 +318,30 @@ def validate(root, notes=None):
                     warns.append(f"{where}: status must be draft, stable or deprecated")
                 if f.name not in index_text:
                     warns.append(f"{where}: not linked from {d / 'index.md'}")
+                desc = str(fm.get("description") or "").strip()
+                if "description" in fm and (not desc or SENTENCE_BREAK.search(desc)):
+                    warns.append(f"{where}: description should be one sentence (it is reused in index.md)")
+                stale = parse_time(fm.get("stale_after")) if "stale_after" in fm else None
+                if stale and stale.tzinfo and stale < now:
+                    warns.append(f"{where}: stale since {fm['stale_after']}; recheck it or move stale_after")
+                n_lines = text.count("\n") + 1
+                if n_lines > MAX_LINES:
+                    warns.append(f"{where}: {n_lines} lines; split concepts over {MAX_LINES} lines")
+                body = FM.sub("", text, count=1)
+                commit = str(fm.get("commit") or "").strip()
+                if LINE_REF.search(body) and not commit:
+                    warns.append(f"{where}: `path:line` refs without a `commit` pin; pin the commit or cite symbols")
+                if repo is not None:
+                    paths = cited_paths(fm, body)
+                    found = {p: in_repo(repo, p) for p in paths}
+                    for p in sorted(p for p, hit in found.items() if not hit):
+                        warns.append(f"{where}: cited path not in repo: {p}")
+                    if commit:
+                        known, changed = changed_since(repo, commit)
+                        if not known:
+                            warns.append(f"{where}: commit {commit} not found in {repo}")
+                        for p in sorted(hit for hit in found.values() if hit and hit in changed):
+                            warns.append(f"{where}: {p} changed since {commit[:7]}; recheck this concept")
             else:
                 if fm is None or not str(fm.get("type") or "").strip():
                     warns.append(f"{where}: reserved file should carry a type")
@@ -287,7 +359,10 @@ def validate(root, notes=None):
                 path = ref.split("#")[0]
                 if not path:
                     continue
-                target = root / path.lstrip("/") if path.startswith("/") else d / path
+                if path.startswith("/"):
+                    warns.append(f"{where}: root-relative link {ref} breaks on GitHub; use a file-relative link")
+                    continue
+                target = d / path
                 if not target.exists():
                     warns.append(f"{where}: broken link {ref}")
     if legacy and notes is not None:
@@ -343,6 +418,50 @@ def self_test():
         with tempfile.TemporaryDirectory() as t:
             e, w, _ = bundle(t, concept)
             assert needle in "\n".join(e + w), (line, e, w)
+
+    base = "---\ntype: Note\ntitle: A\ndescription: DESC\ntags: [a]\ngenerated: { by: human:me, at: 2026-10-24T10:00:00Z }\nEXTRA---\n"
+
+    def head(d="d", extra=""):
+        return base.replace("DESC", d).replace("EXTRA", extra)
+
+    cases = {
+        "root-relative link": head() + "[x](/a_note.md)\n",
+        "one sentence": head("First part. Second part."),
+        "stale since": head(extra="stale_after: 2020-01-01T00:00:00Z\n"),
+        "lines; split": head() + "x\n" * (MAX_LINES + 5),
+        "without a `commit` pin": head() + "See `src/app.py:3`.\n",
+    }
+    for needle, concept in cases.items():
+        with tempfile.TemporaryDirectory() as t:
+            e, w, _ = bundle(t, concept)
+            assert needle in "\n".join(e + w), (needle, e, w)
+    with tempfile.TemporaryDirectory() as t:
+        bundle(t, ok)
+        deep = Path(t, "a", "b", "c")
+        deep.mkdir(parents=True)
+        (deep / "x.md").write_text(ok)
+        assert "nested 3 levels" in "\n".join(validate(Path(t))[1])
+
+    with tempfile.TemporaryDirectory() as t:
+        repo = Path(t, "repo")
+        (repo / "src").mkdir(parents=True)
+        (repo / "src" / "app.py").write_text("a = 1\n")
+        git = ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t.invalid"]
+        subprocess.run([*git, "init", "-q"], check=True)
+        subprocess.run([*git, "add", "."], check=True)
+        subprocess.run([*git, "commit", "-qm", "one"], check=True)
+        sha = subprocess.run([*git, "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+        (repo / "src" / "app.py").write_text("a = 2\n")
+        subprocess.run([*git, "commit", "-qam", "two"], check=True)
+        extra = f"commit: {sha}\nsources:\n  - id: s\n    resource: src/gone.py\n"
+        b = Path(t, "docs")
+        b.mkdir()
+        (b / "a_note.md").write_text(head(extra=extra) + "See `src/app.py:1`.\n")
+        (b / "index.md").write_text(idx)
+        (b / "log.md").write_text(log)
+        out = "\n".join(validate(b, repo=repo)[1])
+        assert "cited path not in repo: src/gone.py" in out and "src/app.py changed since" in out, out
+        assert "commit" not in "\n".join(w for w in validate(b)[1] if "pin" in w), "pinned refs must not warn"
     print("self-test ok")
 
 
@@ -350,11 +469,19 @@ if __name__ == "__main__":
     if "--self-test" in sys.argv:
         self_test()
         sys.exit(0)
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    argv = sys.argv[1:]
+    repo = None
+    if "--repo" in argv:
+        i = argv.index("--repo")
+        if i + 1 >= len(argv):
+            sys.exit(__doc__)
+        repo = Path(argv.pop(i + 1)).resolve()
+        argv.pop(i)
+    args = [a for a in argv if not a.startswith("--")]
     if len(args) != 1:
         sys.exit(__doc__)
     notes = []
-    errs, warns = validate(Path(args[0]).resolve(), notes)
+    errs, warns = validate(Path(args[0]).resolve(), notes, repo)
     for line in errs:
         print("ERROR  ", line)
     for line in warns:
