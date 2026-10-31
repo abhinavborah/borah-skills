@@ -1,9 +1,47 @@
 {
   "skill_name": "okf-docs",
   "evals": [
-    { "id": 1, "prompt": "add a decision note about choosing Postgres to the docs folder", "expected_output": "Loads okf-docs, writes a snake_case concept with frontmatter, updates index.md and log.md, runs the validator." },
-    { "id": 2, "prompt": "check that our docs bundle is valid OKF", "expected_output": "Runs okf_validate.py on docs and reports errors and warnings." },
-    { "id": 3, "prompt": "write the handoff for the next agent", "expected_output": "Does NOT trigger okf-docs first. Triggers session-handoff, which calls okf-docs for the sync.", "should_trigger": false },
-    { "id": 4, "prompt": "rewrite this README paragraph to be clearer", "expected_output": "Does NOT trigger. Prose style is not docs structure.", "should_trigger": false }
+    {
+      "id": 1,
+      "prompt": "add a decision note about choosing Postgres to the docs folder",
+      "expected_output": "Loads okf-docs, writes a snake_case concept with frontmatter, updates index.md and log.md, runs the validator."
+    },
+    {
+      "id": 2,
+      "prompt": "check that our docs bundle is valid OKF",
+      "expected_output": "Runs okf_validate.py on docs and reports errors and warnings."
+    },
+    {
+      "id": 3,
+      "prompt": "write the handoff for the next agent",
+      "expected_output": "Does NOT trigger okf-docs first. Triggers session-handoff, which calls okf-docs for the sync.",
+      "should_trigger": false
+    },
+    {
+      "id": 4,
+      "prompt": "rewrite this README paragraph to be clearer",
+      "expected_output": "Does NOT trigger. Prose style is not docs structure.",
+      "should_trigger": false
+    },
+    {
+      "id": 5,
+      "prompt": "rebuild the docs indexes after I added three notes",
+      "expected_output": "Loads okf-docs, runs build_index.py on docs instead of editing index.md by hand, then runs the validator."
+    },
+    {
+      "id": 6,
+      "prompt": "our docs describe the backend code; check whether they are still current",
+      "expected_output": "Loads okf-docs, runs okf_validate.py with --repo pointing at the repo, reports cited paths that are missing and files changed since each concept's commit, and stale_after dates that have passed."
+    },
+    {
+      "id": 7,
+      "prompt": "add a doc for agents explaining how the deploy script works",
+      "expected_output": "Writes only what the code does not show (intent, hazards, external systems, procedure), points to code by path and symbol, phrases rules as do-not constraints, pins commit, keeps the description to one sentence."
+    },
+    {
+      "id": 8,
+      "prompt": "does our agent context bundle actually help Claude? test it",
+      "expected_output": "Loads okf-docs and follows references/effectiveness_test.md: isolated control and treatment copies, tasks the code alone cannot answer, gold verified against code, blind judge, cost and contamination audit."
+    }
   ]
 }
