@@ -5,6 +5,8 @@ description: Write, update and validate the docs/ folder as an OKF v0.2 bundle (
 
 # OKF docs
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. In Codex and other hosts, use the folder that holds this SKILL.md instead.
+
 OKF v0.2 is a directory of markdown files. One concept per file, YAML frontmatter on top, relative links between files. Spec: https://github.com/GoogleCloudPlatform/open-knowledge-format
 
 This skill owns the docs format. Other skills call it and do not restate these rules.
@@ -48,7 +50,7 @@ Every `docs/...` path in this plugin is relative to the docs home, which holds t
 1. A line `hack-kit docs home: <path>` in the project rules file (`CLAUDE.md`, `AGENTS.md` or `.claude/rules/hack-kit.md`).
 2. Default: `../<repo-name>.docs/`, a sibling folder outside git. The bundle is then `../<repo-name>.docs/docs/`.
 
-The docs home may be the repo root only after the user says yes. Ask with AskUserQuestion before the first write into a tree git tracks, and write the answer into the rules file. Never write handoffs, journal entries or research notes into a tracked tree on your own. Scripts take `--root <docs home>`. Run validators from the docs home.
+The docs home may be the repo root only after the user says yes. Ask with AskUserQuestion (in Codex, ask in chat and wait for the answer) before the first write into a tree git tracks, and write the answer into the rules file. Never write handoffs, journal entries or research notes into a tracked tree on your own. Scripts take `--root <docs home>`. Run validators from the docs home.
 
 ## New folder
 

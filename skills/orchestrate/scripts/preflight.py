@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that a repository is ready for parallel subagents in worktrees.
 
-Usage: preflight.py [--root DIR] [--fix] [--home DIR]
+Usage: preflight.py [--root DIR] [--fix] [--home DIR] [--host claude|codex]
        preflight.py --self-test
 
 Checks:
@@ -10,6 +10,8 @@ Checks:
   baseRef   worktree.baseRef is "head". By default a subagent worktree branches from the
             default branch on the remote, and would miss every unpushed commit.
 --fix writes worktree.baseRef = "head" into <root>/.claude/settings.json (tool config, so ask first).
+--host codex skips baseRef: Codex has no worktree isolation, the orchestrator creates
+worktrees from local HEAD itself. --fix is refused with --host codex.
 Exit 1 when any check fails.
 """
 import argparse
@@ -38,7 +40,7 @@ def base_ref(root, home):
     return None
 
 
-def check(root, home):
+def check(root, home, host="claude"):
     out = []
     if git(root, "rev-parse", "--verify", "-q", "HEAD")[0]:
         return ["repo: not a git repository with a commit"]
@@ -46,7 +48,7 @@ def check(root, home):
     if dirty:
         out.append("clean: uncommitted changes; commit the plan and briefs first so worktrees contain them:\n  " + dirty.replace("\n", "\n  "))
     has_remote = bool(git(root, "remote")[1])
-    if base_ref(root, home) != "head" and has_remote:
+    if host == "claude" and base_ref(root, home) != "head" and has_remote:
         out.append('baseRef: worktree.baseRef is not "head"; subagent worktrees would branch from the remote default branch and miss unpushed work. Run with --fix.')
     return out
 
@@ -73,6 +75,7 @@ def self_test():
         assert check(r, home) == [], "no remote: local HEAD is used, so nothing to fix"
         run("git", "remote", "add", "origin", "https://example.invalid/x.git", cwd=r)
         assert "baseRef" in "".join(check(r, home)), check(r, home)
+        assert check(r, home, "codex") == [], "codex host skips baseRef"
         fix(r)
         assert check(r, home) == [], check(r, home)
         (r / "plan.md").write_text("x\n")
@@ -91,14 +94,17 @@ if __name__ == "__main__":
     p.add_argument("--root", default=".")
     p.add_argument("--home", default=str(Path.home()))
     p.add_argument("--fix", action="store_true")
+    p.add_argument("--host", choices=("claude", "codex"), default="claude")
     p.add_argument("--self-test", action="store_true")
     a = p.parse_args()
     if a.self_test:
         self_test()
         sys.exit(0)
     root = Path(a.root).resolve()
+    if a.fix and a.host == "codex":
+        p.error("--fix writes Claude Code settings; it does not apply with --host codex")
     if a.fix:
         fix(root)
-    res = check(root, Path(a.home))
+    res = check(root, Path(a.home), a.host)
     print("\n".join(res) or "orchestrate preflight ok")
     sys.exit(1 if res else 0)

@@ -1,6 +1,6 @@
 # Interview question bank
 
-Use AskUserQuestion, at most four questions per call, two to four options each. Free text comes through the Other option. Do not proceed on an ambiguous answer. Ask again.
+Use AskUserQuestion (in Codex, ask in chat and wait for the answer), at most four questions per call, two to four options each. Free text comes through the Other option. Do not proceed on an ambiguous answer. Ask again.
 
 ## Batch 1: basics
 
@@ -22,7 +22,7 @@ Ask for confirmation again immediately before running `gh repo create`.
 
 - Create `CLAUDE.md`? yes or no.
 - Create `AGENTS.md`? yes or no.
-- If both are no: write the same rules to `.claude/rules/hack-kit.md` (loaded every session, stays untracked) so skill selection and logging still work? yes or no.
+- If both are no: write the same rules to `.claude/rules/hack-kit.md` (loaded every session in Claude Code only, stays untracked; Codex reads only `AGENTS.md`, so a Codex user needs one of the two files) so skill selection and logging still work? yes or no.
 
 ## Batch 4: stack
 

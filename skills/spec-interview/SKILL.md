@@ -20,7 +20,7 @@ Two modes. If the user does not say which, ask.
 
 ## How to interview
 
-- Use AskUserQuestion. Group related questions, at most four per call. Offer a recommended default as the first option when one exists.
+- Use AskUserQuestion (in Codex, ask in chat and wait for the answer). Group related questions, at most four per call. Offer a recommended default as the first option when one exists.
 - Ask what is not obvious. Skip anything the code, docs or earlier answers already settle.
 - After each batch, restate your understanding in one or two lines so misreadings show early.
 - Press a thin answer once ("what happens when nothing matches?"). Then move on.

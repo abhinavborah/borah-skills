@@ -5,6 +5,8 @@ description: Split work into independent packets, get approval, then dispatch in
 
 # Orchestrate
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. In Codex and other hosts, use the folder that holds this SKILL.md instead.
+
 Parallel agents cost coordination: contracts, briefs, a merge gate, and your own context. Use them only when the parts are independent. Otherwise do the work directly.
 
 Paths below that start with `docs/` are under the docs home. See the `okf-docs` skill. If `~/.claude/swarm.md` exists, read it first and obey its limits. They win over the caps here.
@@ -39,7 +41,7 @@ The ownership table is also a fenced `json ownership` block. It is the ledger th
 
 ## 3. Approve
 
-Show the plan and ask the user to approve it with AskUserQuestion. State the packet count and the mode. Run at most 5 subagents at once; if there are more packets, run them in waves. The user may lower the cap.
+Show the plan and ask the user to approve it with AskUserQuestion (in Codex, ask in chat and wait for the answer). State the packet count and the mode. Run at most 5 subagents at once; if there are more packets, run them in waves. The user may lower the cap.
 
 Dispatch only in a turn after the approval answer arrives. Never ask and dispatch in the same turn.
 
@@ -100,3 +102,17 @@ When reassigning, pass the brief and failure evidence, not the whole earlier con
 ## 7. Close
 
 Remove the worktrees and branches you created, after the merge. Record key decisions and failure causes with the `project-log` skill if the user agreed to a journal. Write a session handoff with the `session-handoff` skill and report to the user what merged, what failed, and what is left.
+
+## 8. Codex
+
+Sections 1 to 7 are written for Claude Code. In Codex keep the gate, plan, approval, ownership ledger, gate scripts and close. Change these steps:
+
+| Step | Claude Code | Codex |
+|---|---|---|
+| Agents | `hack-kit:packet-worker`, `hack-kit:packet-worker-shared` and `hack-kit:reviewer` ship with the plugin | Codex plugins cannot ship agents. Run `python3 <plugin root>/scripts/install_codex_agents.py` once (the plugin root is `<this skill's folder>/../..`). It installs `hack_kit_packet_worker`, `hack_kit_packet_worker_shared` and `hack_kit_reviewer` into `$CODEX_HOME/agents/` (default `~/.codex/agents/`). Run it before starting the session, or restart Codex after. `--uninstall` removes them |
+| Mode and worktrees | `isolation: worktree` makes one per worker, after the preflight sets `worktree.baseRef` | Prefer `shared` mode: workers never run git, so the default `workspace-write` sandbox needs no approvals. Worktree mode works but every `git worktree add` and worker commit writes into the protected `.git` and asks for approval. If you use it, create each worktree yourself with `git worktree add ../<repo>.<packet> -b <packet> HEAD` and put its absolute path in the brief. Run the preflight with `--host codex` |
+| Dispatch | Agent tool, one call per packet in a single message | Ask Codex to spawn one subagent per packet with the matching custom agent. Give each the brief path and packet name, and wait for all of them before collecting |
+| Waiting and correcting | Task notifications, Monitor, messages by name | The main thread waits for subagent results. Inspect, steer or stop threads with `/subagents`. Policy: correct a worker by starting a fresh one from its brief, so the brief stays the single source |
+| Concurrency | At most 5 at once | Same cap. Codex also limits threads per session (`agents.max_concurrent_threads_per_session`) |
+
+Teammate sessions in herdr: `herdr agent start <name> --kind codex --pane <id>` launches the `codex` executable, so it must be on PATH. A wrapper with another name (for example a managed `codx`) is not found unless a `codex` shim on PATH runs it. A herdr Codex session is an ordinary Codex session, so it loads `AGENTS.md`, plugins and custom agents. Codex does not document whether in-process subagents load `AGENTS.md` themselves, so put every rule a worker needs into its brief.

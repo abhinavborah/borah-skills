@@ -15,6 +15,34 @@ claude plugin install hack-kit@borah-skills
 
 Restart Claude Code after installing. Skills appear as `/hack-kit:<skill>`.
 
+### Codex
+
+```shell
+codex plugin marketplace add abhinavborah/borah-skills
+codex plugin add hack-kit@borah-skills
+python3 ~/.codex/plugins/cache/borah-skills/hack-kit/*/scripts/install_codex_agents.py
+```
+
+The last line installs the three orchestrate subagents as Codex custom agents (`$CODEX_HOME/agents/hack_kit_*.toml`, default `~/.codex/agents/`), because Codex plugins cannot ship agents. No version is pinned, so Codex caches the plugin in one folder; if the glob ever matches more than one, the script refuses the extra arguments. Start Codex after installing the agents.
+
+Update to the latest commit:
+
+```shell
+codex plugin marketplace upgrade borah-skills
+codex plugin add hack-kit@borah-skills
+python3 ~/.codex/plugins/cache/borah-skills/hack-kit/*/scripts/install_codex_agents.py
+```
+
+To remove everything:
+
+```shell
+python3 ~/.codex/plugins/cache/borah-skills/hack-kit/*/scripts/install_codex_agents.py --uninstall
+codex plugin remove hack-kit@borah-skills
+codex plugin marketplace remove borah-skills
+```
+
+Skills use `${CLAUDE_SKILL_DIR}` and AskUserQuestion; each skill tells Codex what to use instead. `orchestrate` has a Codex section for subagents and herdr sessions. Claude-only features (ghost mode's `.claude/settings.json` attribution, `submit-pack` trace collection from Claude Code) do nothing in Codex.
+
 ## Skills
 
 | Skill | Use it to |
@@ -38,10 +66,13 @@ Restart Claude Code after installing. Skills appear as `/hack-kit:<skill>`.
 ## Layout
 
 ```
-.claude-plugin/    plugin and marketplace manifests
+.claude-plugin/    Claude Code plugin and marketplace manifests
+.codex-plugin/     Codex plugin manifest (kept in sync by lint)
+.agents/plugins/   Codex marketplace manifest
 skills/<name>/     one SKILL.md per skill, with optional references/ and scripts/
 agents/            packet-worker, packet-worker-shared and reviewer, used by orchestrate
-scripts/lint.py    skill and prose linter, run in CI on every push
+scripts/lint.py    skill, prose and manifest linter, run in CI on every push
+scripts/install_codex_agents.py  turns agents/*.md into Codex custom agents
 docs/design.md     how the skills are structured and why
 ```
 
