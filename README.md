@@ -23,7 +23,17 @@ codex plugin add hack-kit@borah-skills
 python3 ~/.codex/plugins/cache/borah-skills/hack-kit/*/scripts/install_codex_agents.py
 ```
 
-The last line installs the three orchestrate subagents as Codex custom agents (`~/.codex/agents/hack_kit_*.toml`), because Codex plugins cannot ship agents. Rerun it after an update. To remove everything:
+The last line installs the three orchestrate subagents as Codex custom agents (`$CODEX_HOME/agents/hack_kit_*.toml`, default `~/.codex/agents/`), because Codex plugins cannot ship agents. No version is pinned, so Codex caches the plugin in one folder; if the glob ever matches more than one, the script refuses the extra arguments. Start Codex after installing the agents.
+
+Update to the latest commit:
+
+```shell
+codex plugin marketplace upgrade borah-skills
+codex plugin add hack-kit@borah-skills
+python3 ~/.codex/plugins/cache/borah-skills/hack-kit/*/scripts/install_codex_agents.py
+```
+
+To remove everything:
 
 ```shell
 python3 ~/.codex/plugins/cache/borah-skills/hack-kit/*/scripts/install_codex_agents.py --uninstall
