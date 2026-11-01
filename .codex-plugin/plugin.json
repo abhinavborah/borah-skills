@@ -1,0 +1,25 @@
+{
+  "name": "hack-kit",
+  "description": "Hackathon project workflow: opt-in scaffolding, OKF docs, research, handoffs, subagent orchestration, rules contract, evaluation harness, and submission packaging.",
+  "author": {
+    "name": "Abhinav Borah"
+  },
+  "homepage": "https://github.com/abhinavborah/borah-skills",
+  "repository": "https://github.com/abhinavborah/borah-skills",
+  "license": "MIT",
+  "keywords": [
+    "hackathon",
+    "scaffold",
+    "handoff",
+    "docs",
+    "workflow"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "hack-kit",
+    "shortDescription": "Hackathon project workflow skills",
+    "developerName": "Abhinav Borah",
+    "category": "Productivity",
+    "capabilities": ["Instructions"]
+  }
+}
