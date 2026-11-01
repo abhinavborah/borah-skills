@@ -10,7 +10,10 @@ Rules (limits come from the Claude Code skills docs and the authoring guide):
   body        <= 500 lines
   links       relative links resolve; reference files do not link onward
   prose       no em dash and no spaced double hyphen in .md, .json, .py or .yml files
+  manifests   .codex-plugin/plugin.json matches .claude-plugin/plugin.json (name,
+              description, keywords) and points at an existing skills folder
 """
+import json
 import re
 import sys
 import tempfile
@@ -84,8 +87,19 @@ def lint_readme(root):
     return [f"{readme}: skill table lists {sorted(listed - actual)} not in skills/" for _ in [0] if listed - actual] + [f"{readme}: skills/ has {sorted(actual - listed)} missing from the skill table" for _ in [0] if actual - listed]
 
 
+def lint_manifests(root):
+    claude, codex = root / ".claude-plugin" / "plugin.json", root / ".codex-plugin" / "plugin.json"
+    if not claude.exists() or not codex.exists():
+        return []
+    a, b = json.loads(claude.read_text()), json.loads(codex.read_text())
+    errs = [f"{codex}: {k} differs from {claude}" for k in ("name", "description", "keywords") if a.get(k) != b.get(k)]
+    if not (root / b.get("skills", "")).is_dir():
+        errs.append(f"{codex}: skills path {b.get('skills')!r} is not a folder")
+    return errs
+
+
 def lint(root):
-    errs = lint_prose(root) + lint_readme(root)
+    errs = lint_prose(root) + lint_readme(root) + lint_manifests(root)
     for d in sorted((root / "skills").glob("*/")):
         if (d / "SKILL.md").exists():
             errs += lint_skill(d)
@@ -116,6 +130,12 @@ def self_test():
         (bad / "README.md").write_text("| `ghost` | x |\n| `beta` | x |\n")
         out = "\n".join(lint(bad))
         assert "not in skills/" in out and "missing from the skill table" in out, out
+        for d in (".claude-plugin", ".codex-plugin"):
+            (bad / d).mkdir()
+        (bad / ".claude-plugin" / "plugin.json").write_text('{"name": "kit", "description": "a"}')
+        (bad / ".codex-plugin" / "plugin.json").write_text('{"name": "kit", "description": "b", "skills": "./nope/"}')
+        out = "\n".join(lint(bad))
+        assert "description differs" in out and "is not a folder" in out, out
         for needle in ("invalid name", "body over", "broken link", "must equal directory", "em dash"):
             assert needle in out, (needle, out)
     print("self-test ok")
