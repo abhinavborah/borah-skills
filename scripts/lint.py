@@ -89,12 +89,22 @@ def lint_readme(root):
 
 def lint_manifests(root):
     claude, codex = root / ".claude-plugin" / "plugin.json", root / ".codex-plugin" / "plugin.json"
-    if not claude.exists() or not codex.exists():
+    market = root / ".agents" / "plugins" / "marketplace.json"
+    if not claude.exists() and not codex.exists():
         return []
-    a, b = json.loads(claude.read_text()), json.loads(codex.read_text())
+    if not (claude.exists() and codex.exists()):
+        return [f"{root}: need both .claude-plugin/plugin.json and .codex-plugin/plugin.json"]
+    try:
+        a, b = json.loads(claude.read_text()), json.loads(codex.read_text())
+        m = json.loads(market.read_text()) if market.exists() else {"plugins": [{"name": b.get("name")}]}
+    except json.JSONDecodeError as e:
+        return [f"{root}: invalid manifest JSON: {e}"]
     errs = [f"{codex}: {k} differs from {claude}" for k in ("name", "description", "keywords") if a.get(k) != b.get(k)]
-    if not (root / b.get("skills", "")).is_dir():
-        errs.append(f"{codex}: skills path {b.get('skills')!r} is not a folder")
+    skills = b.get("skills")
+    if not skills or not skills.startswith("./") or not (root / skills).is_dir():
+        errs.append(f"{codex}: skills path {skills!r} must be a ./ folder that exists")
+    if b.get("name") not in [x.get("name") for x in m.get("plugins", [])]:
+        errs.append(f"{market}: no plugin named {b.get('name')!r}")
     return errs
 
 
@@ -135,7 +145,9 @@ def self_test():
         (bad / ".claude-plugin" / "plugin.json").write_text('{"name": "kit", "description": "a"}')
         (bad / ".codex-plugin" / "plugin.json").write_text('{"name": "kit", "description": "b", "skills": "./nope/"}')
         out = "\n".join(lint(bad))
-        assert "description differs" in out and "is not a folder" in out, out
+        assert "description differs" in out and "must be a ./ folder" in out, out
+        (bad / ".codex-plugin" / "plugin.json").unlink()
+        assert "need both" in "\n".join(lint(bad))
         for needle in ("invalid name", "body over", "broken link", "must equal directory", "em dash"):
             assert needle in out, (needle, out)
     print("self-test ok")
