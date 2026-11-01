@@ -22,7 +22,7 @@ Ask for confirmation again immediately before running `gh repo create`.
 
 - Create `CLAUDE.md`? yes or no.
 - Create `AGENTS.md`? yes or no.
-- If both are no: write the same rules to `.claude/rules/hack-kit.md` (loaded every session, stays untracked) so skill selection and logging still work? yes or no.
+- If both are no: write the same rules to `.claude/rules/hack-kit.md` (loaded every session in Claude Code only, stays untracked; Codex reads only `AGENTS.md`, so a Codex user needs one of the two files) so skill selection and logging still work? yes or no.
 
 ## Batch 4: stack
 
