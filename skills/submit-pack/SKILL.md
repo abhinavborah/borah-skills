@@ -5,6 +5,8 @@ description: Package a hackathon or contest submission. Shows time left to the d
 
 # Submit pack
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. In Codex and other hosts, use the folder that holds this SKILL.md instead.
+
 Packaging fails late and by hand: archives rebuilt three times, traces split across folders, junk and personal data inside zips. Do it once, in order, with a checklist.
 
 Paths that start with `docs/` are under the docs home. See the `okf-docs` skill.

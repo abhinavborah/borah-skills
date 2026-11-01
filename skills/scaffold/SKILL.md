@@ -7,6 +7,8 @@ argument-hint: "[project name]"
 
 # Scaffold
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. In Codex and other hosts, use the folder that holds this SKILL.md instead.
+
 Nothing is created until the user agrees. Skipped answers mean skipped steps. Scripts never overwrite existing files.
 
 ## 1. Confirm
@@ -19,7 +21,7 @@ Run the preflight from the `research` skill and tell the user which research too
 
 ## 3. Interview
 
-Ask in batches of at most four questions with AskUserQuestion. The question bank is in [references/questions.md](references/questions.md). Cover:
+Ask in batches of at most four questions with AskUserQuestion (in Codex, ask in chat and wait for the answer). The question bank is in [references/questions.md](references/questions.md). Cover:
 
 1. Basics: project name, one-line idea, deadline, team size, the user's handle.
 2. Repository: GitHub repo name and visibility, and whether to create it. Ask again right before creating.

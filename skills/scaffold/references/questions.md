@@ -1,6 +1,6 @@
 # Interview question bank
 
-Use AskUserQuestion, at most four questions per call, two to four options each. Free text comes through the Other option. Do not proceed on an ambiguous answer. Ask again.
+Use AskUserQuestion (in Codex, ask in chat and wait for the answer), at most four questions per call, two to four options each. Free text comes through the Other option. Do not proceed on an ambiguous answer. Ask again.
 
 ## Batch 1: basics
 

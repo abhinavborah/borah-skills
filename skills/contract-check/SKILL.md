@@ -5,6 +5,8 @@ description: Turn the organizer's rules (problem statement, AGENTS.md, README, j
 
 # Contract check
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. In Codex and other hosts, use the folder that holds this SKILL.md instead.
+
 Organizer rules are a contract. Late discoveries come from rules read once, in one place, by one agent. Extract them all first, number them, and recheck at the end.
 
 Paths that start with `docs/` are under the docs home. See the `okf-docs` skill.

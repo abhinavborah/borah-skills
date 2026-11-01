@@ -5,6 +5,8 @@ description: Set up honest evaluation before tuning anything. Makes a determinis
 
 # Eval harness
 
+`${CLAUDE_SKILL_DIR}` is this skill's folder. In Codex and other hosts, use the folder that holds this SKILL.md instead.
+
 An accuracy number is only a claim if the data it was measured on was never used to tune. Build the split and the guard first, then tune.
 
 Paths that start with `docs/` are under the docs home. See the `okf-docs` skill.
